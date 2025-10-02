@@ -56,7 +56,10 @@ class Auth extends Controller
         $email   = $this->request->getPost('email');
         $password= $this->request->getPost('password');
 
-        $user = $model->where('email', $email)->first();
+        $user = $model->select('user.*, role.role')
+                      ->join('role', 'role.id = user.role_id', 'left')
+                      ->where('email', $email)
+                      ->first();
 
         if ($user) {
             if (password_verify($password, $user['password'])) {
@@ -66,6 +69,7 @@ class Auth extends Controller
                     'email'     => $user['email'],
                     'image'     => $user['image'],
                     'role_id'   => $user['role_id'],
+                    'role'      => $user['role'], // Menambahkan nama peran ke sesi
                     'logged_in' => true
                 ];
                 $session->set($sessionData);

@@ -27,7 +27,7 @@ class Dashboard extends BaseController
         $data['memberTrendLabels'] = json_encode($memberTrendData['labels']);
         $data['memberTrendCounts'] = json_encode($memberTrendData['counts']);
 
-        return view('dashboard', $data);
+        return view('pages/admin/dashboard', $data);
     }
 
     /**

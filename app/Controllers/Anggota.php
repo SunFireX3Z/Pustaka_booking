@@ -9,22 +9,16 @@ class Anggota extends BaseController
     public function index()
     {
         $userModel = new UserModel();
+        $roleModel = new RoleModel();
         $data['anggota'] = $userModel
             ->select('user.*, role.role')
             ->join('role', 'role.id = user.role_id', 'left')
             ->orderBy('user.id', 'DESC')
             ->findAll();
-
-        return view('anggota', $data);
-    }
-
-    public function new()
-    {
-        helper('form');
-        $roleModel = new RoleModel();
-        $data['validation'] = \Config\Services::validation();
         $data['roles'] = $roleModel->findAll();
-        return view('anggota_form', $data);
+        $data['validation'] = \Config\Services::validation();
+
+        return view('pages/admin/anggota', $data);
     }
 
     public function create()
@@ -40,10 +34,12 @@ class Anggota extends BaseController
         ];
 
         if (!$this->validate($rules)) {
-            return redirect()->to('/anggota/new')->withInput()->with('validation', $validation);
+            return redirect()->to('/anggota')->withInput()
+                                             ->with('validation', $validation)
+                                             ->with('show_modal', 'add');
         }
 
-        $imageName = 'default.png';
+        $imageName = 'default.jpg';
         $croppedImage = $this->request->getPost('cropped_image');
 
         if ($croppedImage) {
@@ -72,22 +68,6 @@ class Anggota extends BaseController
         return redirect()->to('/anggota');
     }
 
-    public function edit($id)
-    {
-        helper('form');
-        $userModel = new UserModel();
-        $roleModel = new RoleModel();
-        $data['anggota'] = $userModel->find($id);
-        $data['validation'] = \Config\Services::validation();
-        $data['roles'] = $roleModel->findAll();
-
-        if (empty($data['anggota'])) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Anggota tidak ditemukan: ' . $id);
-        }
-
-        return view('anggota_form', $data);
-    }
-
     public function update($id)
     {
         $userModel = new UserModel();
@@ -98,7 +78,10 @@ class Anggota extends BaseController
         ];
 
         if (!$this->validate($rules)) {
-            return redirect()->to('/anggota/edit/' . $id)->withInput()->with('validation', $this->validator);
+            return redirect()->to('/anggota')->withInput()
+                                             ->with('validation', $this->validator)
+                                             ->with('show_modal', 'edit')
+                                             ->with('edit_id', $id);
         }
 
         $anggota = $userModel->find($id);
@@ -116,7 +99,7 @@ class Anggota extends BaseController
             file_put_contents(FCPATH . 'uploads/' . $imageName, $decodedImage);
 
             // Hapus gambar lama jika bukan default
-            if ($anggota['image'] !== 'default.png' && file_exists(FCPATH . 'uploads/' . $anggota['image'])) {
+            if ($anggota['image'] !== 'default.jpg' && file_exists(FCPATH . 'uploads/' . $anggota['image'])) {
                 unlink(FCPATH . 'uploads/' . $anggota['image']);
             }
         }
@@ -138,7 +121,7 @@ class Anggota extends BaseController
 
         if ($anggota) {
             // Hapus gambar jika bukan default
-            if ($anggota['image'] !== 'default.png' && file_exists(FCPATH . 'uploads/' . $anggota['image'])) {
+            if ($anggota['image'] !== 'default.jpg' && file_exists(FCPATH . 'uploads/' . $anggota['image'])) {
                 unlink(FCPATH . 'uploads/' . $anggota['image']);
             }
             $userModel->delete($id);

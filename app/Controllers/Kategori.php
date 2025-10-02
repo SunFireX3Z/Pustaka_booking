@@ -1,83 +1,99 @@
 <?php
+
 namespace App\Controllers;
 
 use App\Models\KategoriModel;
+use App\Models\BukuModel;
 
 class Kategori extends BaseController
 {
-    public function index()
-    {
-        $kategoriModel = new KategoriModel();
-        $data['kategori'] = $kategoriModel->orderBy('id_kategori', 'DESC')->findAll();
+    protected $kategoriModel;
+    protected $bukuModel;
 
-        return view('kategori', $data);
+    public function __construct()
+    {
+        $this->kategoriModel = new KategoriModel();
+        $this->bukuModel = new BukuModel();
     }
 
-    public function new()
+    public function index()
     {
-        helper('form');
-        $data['validation'] = \Config\Services::validation();
-        return view('kategori_form', $data);
+        // Data untuk kartu statistik
+        $data['total_kategori'] = $this->kategoriModel->countAllResults();
+        $data['total_judul_buku'] = $this->bukuModel->countAllResults();
+
+        // Menemukan kategori terpopuler (berdasarkan jumlah judul buku)
+        $kategoriPopuler = $this->kategoriModel
+            ->select('kategori.nama_kategori as nama, COUNT(buku.id) as jumlah_buku')
+            ->join('buku', 'buku.id_kategori = kategori.id_kategori', 'left')
+            ->groupBy('kategori.id_kategori, kategori.nama_kategori')
+            ->orderBy('jumlah_buku', 'DESC')
+            ->first();
+        $data['kategori_populer'] = $kategoriPopuler ?? ['nama' => 'Belum ada data'];
+
+        // Mengambil semua kategori beserta jumlah buku dan cover acak
+        $kategoriList = $this->kategoriModel
+            ->select('kategori.*, COUNT(buku.id) as jumlah_buku')
+            ->join('buku', 'buku.id_kategori = kategori.id_kategori', 'left')
+            ->groupBy('kategori.id_kategori')
+            ->orderBy('kategori.nama_kategori', 'ASC')
+            ->findAll();
+
+        // Menambahkan cover acak untuk setiap kategori yang memiliki buku
+        foreach ($kategoriList as &$k) {
+            if ($k['jumlah_buku'] > 0) {
+                $randomBook = $this->bukuModel->where('id_kategori', $k['id_kategori'])->orderBy('RAND()')->first();
+                $k['random_cover'] = $randomBook['image'] ?? 'default.png';
+            } else {
+                $k['random_cover'] = 'default.png';
+            }
+        }
+        $data['kategori'] = $kategoriList;
+
+        return view('pages/admin/kategori', $data);
     }
 
     public function create()
     {
-        helper('form');
         $validation = \Config\Services::validation();
+        $validation->setRules(['nama_kategori' => 'required|is_unique[kategori.nama_kategori]']);
 
-        $rules = [
-            'nama_kategori' => 'required|min_length[3]|is_unique[kategori.nama_kategori]',
-        ];
-
-        if (!$this->validate($rules)) {
-            return redirect()->to('/kategori/new')->withInput()->with('validation', $validation);
+        if (!$validation->withRequest($this->request)->run()) {
+            return redirect()->to('/kategori')->withInput()->with('validation', $validation)->with('show_modal', 'add');
         }
 
-        $kategoriModel = new KategoriModel();
-        $kategoriModel->save([
-            'nama_kategori' => $this->request->getPost('nama_kategori'),
+        $this->kategoriModel->save([
+            'nama_kategori' => $this->request->getPost('nama_kategori')
         ]);
 
-        session()->setFlashdata('success', 'Kategori baru berhasil ditambahkan.');
-        return redirect()->to('/kategori');
-    }
-
-    public function edit($id)
-    {
-        helper('form');
-        $kategoriModel = new KategoriModel();
-        $data['kategori'] = $kategoriModel->find($id);
-        $data['validation'] = \Config\Services::validation();
-
-        if (empty($data['kategori'])) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Kategori tidak ditemukan: ' . $id);
-        }
-
-        return view('kategori_form', $data);
+        return redirect()->to('/kategori')->with('success', 'Kategori berhasil ditambahkan.');
     }
 
     public function update($id)
     {
-        $kategoriModel = new KategoriModel();
-        $rules = [
-            'nama_kategori' => "required|min_length[3]|is_unique[kategori.nama_kategori,id_kategori,{$id}]",
-        ];
+        $validation = \Config\Services::validation();
+        $validation->setRules(['nama_kategori' => "required|is_unique[kategori.nama_kategori,id_kategori,{$id}]"]);
 
-        if (!$this->validate($rules)) {
-            return redirect()->to('/kategori/edit/' . $id)->withInput()->with('validation', $this->validator);
+        if (!$validation->withRequest($this->request)->run()) {
+            return redirect()->to('/kategori')->withInput()->with('validation', $validation)->with('show_modal', 'edit')->with('edit_id', $id);
         }
 
-        $kategoriModel->update($id, ['nama_kategori' => $this->request->getPost('nama_kategori')]);
-        session()->setFlashdata('success', 'Data kategori berhasil diperbarui.');
-        return redirect()->to('/kategori');
+        $this->kategoriModel->update($id, [
+            'nama_kategori' => $this->request->getPost('nama_kategori')
+        ]);
+
+        return redirect()->to('/kategori')->with('success', 'Kategori berhasil diperbarui.');
     }
 
     public function delete($id)
     {
-        $kategoriModel = new KategoriModel();
-        // Tambahkan pengecekan jika kategori digunakan oleh buku sebelum menghapus
-        $kategoriModel->delete($id);
-        session()->setFlashdata('success', 'Kategori berhasil dihapus.');
-        return redirect()->to('/kategori');
+        // Cek apakah ada buku yang menggunakan kategori ini
+        $bukuTerkait = $this->bukuModel->where('id_kategori', $id)->countAllResults();
+        if ($bukuTerkait > 0) {
+            return redirect()->to('/kategori')->with('error', 'Gagal menghapus! Kategori ini masih digunakan oleh ' . $bukuTerkait . ' buku.');
+        }
+
+        $this->kategoriModel->delete($id);
+        return redirect()->to('/kategori')->with('success', 'Kategori berhasil dihapus.');
     }
 }

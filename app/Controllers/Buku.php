@@ -30,7 +30,7 @@ class Buku extends BaseController
         // Kirim data buku asli untuk modal edit
         $data['buku'] = $allBooks;
  
-        return view('buku', $data);
+        return view('pages/admin/buku', $data);
     }
     
     public function create()
