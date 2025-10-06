@@ -24,6 +24,10 @@ class Buku extends BaseController
             $groupedBooks[$categoryName][] = $book;
         }
 
+        // Data untuk kartu statistik
+        $data['total_judul_buku'] = count($allBooks);
+        $data['total_stok_buku'] = $bukuModel->selectSum('stok')->get()->getRow()->stok ?? 0;
+
         $data['groupedBooks'] = $groupedBooks;
         $data['kategori'] = $kategoriModel->findAll();
         $data['validation'] = \Config\Services::validation();
@@ -47,7 +51,7 @@ class Buku extends BaseController
             'isbn'         => 'required',
             'stok'         => 'required|integer',
             'image'        => 'uploaded[image]|max_size[image,1024]|is_image[image]|mime_in[image,image/jpg,image/jpeg,image/png,image/webp]',
-            'hipotesis'    => 'required'
+            'deskripsi'    => 'required'
         ]);
 
         if (!$validation->withRequest($this->request)->run()) {
@@ -77,7 +81,7 @@ class Buku extends BaseController
             'tahun_terbit' => $this->request->getPost('tahun_terbit'),
             'isbn'         => $this->request->getPost('isbn'),
             'stok'         => $this->request->getPost('stok'),
-            'hipotesis'    => $this->request->getPost('hipotesis'),
+            'deskripsi'    => $this->request->getPost('deskripsi'),
             'image'        => $newName,
         ];
 
@@ -108,7 +112,7 @@ class Buku extends BaseController
             'tahun_terbit' => 'required|integer',
             'isbn'         => 'required',
             'stok'         => 'required|integer',
-            'hipotesis'    => 'required',
+            'deskripsi'    => 'required',
             'image'        => 'max_size[image,1024]|is_image[image]|mime_in[image,image/jpg,image/jpeg,image/png,image/webp]'
         ];
 
@@ -140,7 +144,7 @@ class Buku extends BaseController
             'tahun_terbit' => $this->request->getPost('tahun_terbit'),
             'isbn'         => $this->request->getPost('isbn'),
             'stok'         => $this->request->getPost('stok'),
-            'hipotesis'    => $this->request->getPost('hipotesis'),
+            'deskripsi'    => $this->request->getPost('deskripsi'),
             'image'        => $newName,
         ];
 

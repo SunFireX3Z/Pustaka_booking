@@ -20,7 +20,6 @@ class Kategori extends BaseController
     {
         // Data untuk kartu statistik
         $data['total_kategori'] = $this->kategoriModel->countAllResults();
-        $data['total_judul_buku'] = $this->bukuModel->countAllResults();
 
         // Menemukan kategori terpopuler (berdasarkan jumlah judul buku)
         $kategoriPopuler = $this->kategoriModel

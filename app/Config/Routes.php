@@ -18,6 +18,9 @@ $routes->post('register', 'Auth::register');
 // Rute utama setelah login
 $routes->get('dashboard', 'Dashboard::index');
 
+// Rute untuk Member
+$routes->get('member', 'Member::index');
+
 // Rute CRUD untuk Buku
 $routes->get('buku', 'Buku::index');
 $routes->post('buku', 'Buku::create');

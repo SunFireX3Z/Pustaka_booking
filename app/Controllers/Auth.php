@@ -73,7 +73,13 @@ class Auth extends Controller
                     'logged_in' => true
                 ];
                 $session->set($sessionData);
-                return redirect()->to('/dashboard');
+
+                // Arahkan berdasarkan role_id
+                if ($user['role_id'] == 1 || $user['role_id'] == 2) { // Admin atau Petugas
+                    return redirect()->to('/dashboard');
+                } else { // Member
+                    return redirect()->to('/member');
+                }
             } else {
                 $session->setFlashdata('msg', 'Password salah');
                 return redirect()->back();

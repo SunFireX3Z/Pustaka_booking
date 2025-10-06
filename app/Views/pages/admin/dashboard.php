@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="<?= base_url('css/style.css') ?>">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- ApexCharts -->
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
@@ -19,6 +19,22 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    /* Custom Scrollbar */
+     ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+     }
+     ::-webkit-scrollbar-track {
+      background: transparent;
+     }
+     ::-webkit-scrollbar-thumb {
+      background: #cbd5e1; /* slate-300 */
+      border-radius: 10px;
+     }
+     ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8; /* slate-400 */
+     }
     .sidebar-is-collapsed #sidebar { width: 4rem; }
     .sidebar-is-collapsed #sidebar .sidebar-text { display: none; }
     .sidebar-is-collapsed #sidebar .sidebar-logo-text { display: none; }
@@ -197,8 +213,8 @@
           <div class="card-item flex justify-between items-center mb-4">
             <h4 class="text-xl font-semibold text-gray-700">Komposisi Buku</h4>
           </div>
-          <div id="bookChartContainer" class="card-item bg-white p-6 rounded-lg shadow flex-grow flex flex-col">
-            <div class="relative flex-grow"><canvas id="bookChart"></canvas></div>
+          <div id="bookChartContainer" class="card-item bg-white p-4 rounded-lg shadow flex-grow flex items-center justify-center">
+            <div id="bookChart" class="w-full"></div>
           </div>
         </div>
       </div>
@@ -210,7 +226,9 @@
           <div class="card-item flex justify-between items-center mb-4">
             <h4 class="text-xl font-semibold text-gray-700">Tren Anggota Baru</h4>
           </div>
-          <div class="card-item bg-white p-6 rounded-lg shadow"><canvas id="memberChart"></canvas></div>
+          <div class="card-item bg-white p-6 rounded-lg shadow">
+            <div id="memberChart"></div>
+          </div>
         </div>
         <!-- Buku Baru Ditambahkan -->
         <div class="lg:col-span-2">
@@ -240,10 +258,10 @@
   <script>
     // Animasi staggered untuk kartu buku
     document.addEventListener('DOMContentLoaded', () => {
-      // Variabel untuk menyimpan instance chart
-      let bookChartInstance, memberChartInstance;
-
       const cards = document.querySelectorAll('.card-item');
+      let bookChart, memberChart;
+
+      // Staggered animation for cards
       const memberTableContainer = document.getElementById('memberTableContainer');
       const bookChartContainer = document.getElementById('bookChartContainer');
 
@@ -253,100 +271,111 @@
         }, index * 100); // Delay 100ms untuk setiap kartu
       });
 
-      // Menyamakan tinggi chart dengan tabel
+      // Match chart container height with member table height
       function matchHeights() {
-        if (memberTableContainer && bookChartContainer) {
-          bookChartContainer.style.height = `${memberTableContainer.offsetHeight}px`;
+        // Hanya jalankan di layar besar (lg) di mana layoutnya berdampingan
+        if (window.innerWidth >= 1024 && memberTableContainer && bookChartContainer) {
+          const tableHeight = memberTableContainer.offsetHeight;
+          const chartHeight = bookChartContainer.offsetHeight;
+
+          if (tableHeight > chartHeight) {
+            bookChartContainer.style.height = `${tableHeight}px`;
+          }
         }
       }
       matchHeights();
-      window.addEventListener('resize', matchHeights); // Juga sesuaikan saat ukuran window berubah
+      window.addEventListener('resize', matchHeights);
 
-    // Chart.js - Komposisi Buku
-    const bookCtx = document.getElementById('bookChart').getContext('2d');
-    bookChartInstance = new Chart(bookCtx, {
-      type: 'bar', // Mengubah tipe chart menjadi bar
-      data: {
+      // ApexCharts - Komposisi Buku
+      const bookChartOptions = {
+        series: [<?= $stokBuku ?>, <?= $dipinjam ?>, <?= $dibooking ?>],
+        chart: {
+          type: 'donut',
+          height: '100%', // Biarkan chart mengisi kontainer
+          toolbar: { show: false },
+        },
         labels: ['Tersedia', 'Dipinjam', 'Dibooking'],
-        datasets: [{
-          label: 'Jumlah Buku',
-          data: [<?= $stokBuku ?>, <?= $dipinjam ?>, <?= $dibooking ?>],
-          backgroundColor: [
-            'rgba(59, 130, 246, 0.8)', // blue-500
-            'rgba(239, 68, 68, 0.8)',  // red-500
-            'rgba(34, 197, 94, 0.8)'   // green-500
-          ],
-          borderColor: [
-            'rgba(59, 130, 246, 1)',
-            'rgba(239, 68, 68, 1)',
-            'rgba(34, 197, 94, 1)'
-          ],
-          borderWidth: 1
-        }]
-      },
-      options: {
-        indexAxis: 'y', // Membuat bar chart menjadi horizontal
-        maintainAspectRatio: false, // Penting agar chart mengisi kontainer
-        responsive: true,
-        scales: {
-          x: {
-            beginAtZero: true
+        colors: ['#3B82F6', '#EF4444', '#22C55E'], // blue-500, red-500, green-500
+        plotOptions: {
+          pie: {
+            donut: {
+              size: '65%',
+              labels: {
+                show: true,
+                total: {
+                  show: true,
+                  label: 'Total Buku',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  color: '#374151'
+                }
+              }
+            }
           }
         },
-        plugins: {
-          legend: {
-            display: false, // Legenda tidak terlalu diperlukan untuk bar chart ini
+        dataLabels: {
+          enabled: true,
+          formatter: function (val, opts) {
+            return opts.w.config.series[opts.seriesIndex]
           },
-          title: {
-            display: false, // Judul utama sudah ada di atas chart
-            text: 'Komposisi Status Buku'
-          }
-        }
-      }
-    });
+        },
+        legend: {
+          position: 'bottom',
+          fontSize: '14px',
+        },
+      };
+      bookChart = new ApexCharts(document.querySelector("#bookChart"), bookChartOptions);
+      bookChart.render();
 
-    // Chart.js - Tren Anggota Baru
-    const memberCtx = document.getElementById('memberChart').getContext('2d');
-    memberChartInstance = new Chart(memberCtx, {
-      type: 'bar',
-      data: {
-        labels: <?= $memberTrendLabels ?>, // Data dari controller
-        datasets: [{
-          label: 'Anggota Baru',
-          data: <?= $memberTrendCounts ?>, // Data dari controller
-          backgroundColor: 'rgba(59, 130, 246, 0.6)',
-          borderColor: 'rgba(59, 130, 246, 1)',
-          borderWidth: 1,
-          borderRadius: 5
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true
+      // ApexCharts - Tren Anggota Baru
+      const memberChartOptions = {
+        series: [{
+          name: 'Anggota Baru',
+          data: <?= $memberTrendCounts ?>
+        }],
+        chart: {
+          type: 'area',
+          height: 300,
+          zoom: { enabled: false },
+          toolbar: { show: false }
+        },
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: 2 },
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.7,
+            opacityTo: 0.2,
+            stops: [0, 90, 100]
           }
         },
-        plugins: {
-          legend: {
-            display: false
+        xaxis: {
+          categories: <?= $memberTrendLabels ?>,
+          labels: { style: { colors: '#6B7280' } }
+        },
+        yaxis: {
+          labels: {
+            style: { colors: '#6B7280' },
+            formatter: (val) => { return val.toFixed(0) }
           }
+        },
+        grid: {
+          borderColor: '#E5E7EB',
+          strokeDashArray: 4
+        },
+        tooltip: {
+          x: { format: 'MMM yyyy' }
         }
-      }
-    });
+      };
+      memberChart = new ApexCharts(document.querySelector("#memberChart"), memberChartOptions);
+      memberChart.render();
 
     // Sidebar Toggle
     const sidebarToggle = document.getElementById('sidebar-toggle');
 
     sidebarToggle.addEventListener('click', () => {
       document.documentElement.classList.toggle('sidebar-is-collapsed');
-
-      // Tunda resize chart sampai setelah transisi sidebar selesai (300ms)
-      // Ini memperbaiki bug di mana chart mengecil saat sidebar di-toggle.
-      setTimeout(() => {
-        bookChartInstance.resize();
-        memberChartInstance.resize();
-      }, 310); // Sedikit lebih lama dari durasi transisi (300ms)
 
       // Simpan status sidebar di localStorage
       const isCollapsed = document.documentElement.classList.contains('sidebar-is-collapsed');

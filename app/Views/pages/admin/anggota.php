@@ -20,6 +20,22 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    /* Custom Scrollbar */
+     ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+     }
+     ::-webkit-scrollbar-track {
+      background: transparent;
+     }
+     ::-webkit-scrollbar-thumb {
+      background: #cbd5e1; /* slate-300 */
+      border-radius: 10px;
+     }
+     ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8; /* slate-400 */
+     }
     .sidebar-is-collapsed #sidebar .sidebar-text { display: none; }
     .sidebar-is-collapsed #sidebar .sidebar-logo-text { display: none; }
     .sidebar-is-collapsed #sidebar .sidebar-menu-title { text-align: center; }

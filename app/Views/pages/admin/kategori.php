@@ -19,6 +19,22 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    /* Custom Scrollbar */
+     ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+     }
+     ::-webkit-scrollbar-track {
+      background: transparent;
+     }
+     ::-webkit-scrollbar-thumb {
+      background: #cbd5e1; /* slate-300 */
+      border-radius: 10px;
+     }
+     ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8; /* slate-400 */
+     }
     .sidebar-is-collapsed #sidebar .sidebar-text { display: none; }
     .sidebar-is-collapsed #sidebar .sidebar-logo-text { display: none; }
     .sidebar-is-collapsed #sidebar .sidebar-menu-title { text-align: center; }
@@ -106,7 +122,7 @@
     <!-- Content -->
     <main class="p-6">
       <!-- Kartu Statistik -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <!-- Total Kategori -->
         <div class="card-item bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border-l-4 border-blue-500">
           <div class="bg-blue-100 p-3 rounded-full">
@@ -125,16 +141,6 @@
           <div class="flex-1 min-w-0">
             <p class="text-gray-500 text-sm font-medium">Kategori Terpopuler</p>
             <p class="text-lg font-bold text-gray-800 truncate" title="<?= esc($kategori_populer['nama']) ?>"><?= esc($kategori_populer['nama']) ?></p>
-          </div>
-        </div>
-        <!-- Total Judul Buku -->
-        <div class="card-item bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border-l-4 border-purple-500">
-          <div class="bg-purple-100 p-3 rounded-full">
-            <i class="fas fa-book fa-lg text-purple-600"></i>
-          </div>
-          <div>
-            <p class="text-gray-500 text-sm font-medium">Total Judul Buku</p>
-            <p class="text-2xl font-bold text-gray-800"><?= $total_judul_buku ?? 0 ?></p>
           </div>
         </div>
       </div>

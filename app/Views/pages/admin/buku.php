@@ -22,6 +22,22 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    /* Custom Scrollbar */
+     ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+     }
+     ::-webkit-scrollbar-track {
+      background: transparent;
+     }
+     ::-webkit-scrollbar-thumb {
+      background: #cbd5e1; /* slate-300 */
+      border-radius: 10px;
+     }
+     ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8; /* slate-400 */
+     }
     .sidebar-is-collapsed #sidebar { width: 4rem; }
     .sidebar-is-collapsed #sidebar .sidebar-text { display: none; }
     .sidebar-is-collapsed #sidebar .sidebar-logo-text { display: none; }
@@ -109,7 +125,31 @@
 
     <!-- Content -->
     <main class="p-6">
-      <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
+      <!-- Kartu Statistik -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Total Judul Buku -->
+        <div class="card-item bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border-l-4 border-purple-500">
+          <div class="bg-purple-100 p-3 rounded-full">
+            <i class="fas fa-book fa-lg text-purple-600"></i>
+          </div>
+          <div>
+            <p class="text-gray-500 text-sm font-medium">Total Judul Buku</p>
+            <p class="text-2xl font-bold text-gray-800"><?= $total_judul_buku ?? 0 ?></p>
+          </div>
+        </div>
+        <!-- Total Stok Buku -->
+        <div class="card-item bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border-l-4 border-yellow-500">
+          <div class="bg-yellow-100 p-3 rounded-full">
+            <i class="fas fa-boxes fa-lg text-yellow-600"></i>
+          </div>
+          <div>
+            <p class="text-gray-500 text-sm font-medium">Total Stok Keseluruhan</p>
+            <p class="text-2xl font-bold text-gray-800"><?= $total_stok_buku ?? 0 ?></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-item bg-white p-4 rounded-lg shadow-sm mb-6">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 class="text-2xl font-bold text-blue-600">Daftar Buku Perpustakaan</h2>
@@ -173,7 +213,7 @@
                   <!-- Tombol Aksi -->
                   <div class="flex-shrink-0 flex items-center gap-2 mt-3 sm:mt-0">
                     <button onclick="showDetail(this)" class="w-9 h-9 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors" title="Lihat Detail"
-                      data-judul="<?= esc($row['judul_buku']) ?>" data-penerbit="<?= esc($row['penerbit']) ?>" data-pengarang="<?= esc($row['pengarang']) ?>" data-tahun="<?= esc($row['tahun_terbit']) ?>" data-stok="<?= esc($row['stok']) > 0 ? $row['stok'] . ' Tersedia' : 'Kosong' ?>" data-kategori="<?= esc($row['nama_kategori'] ?? 'Tidak ada kategori') ?>" data-hipotesis="<?= esc($row['hipotesis'] ?? '-') ?>" data-image="<?= base_url('uploads/' . $row['image']) ?>">
+                      data-judul="<?= esc($row['judul_buku']) ?>" data-penerbit="<?= esc($row['penerbit']) ?>" data-pengarang="<?= esc($row['pengarang']) ?>" data-tahun="<?= esc($row['tahun_terbit']) ?>" data-stok="<?= esc($row['stok']) > 0 ? $row['stok'] . ' Tersedia' : 'Kosong' ?>" data-kategori="<?= esc($row['nama_kategori'] ?? 'Tidak ada kategori') ?>" data-deskripsi="<?= esc($row['deskripsi'] ?? '-') ?>" data-image="<?= base_url('uploads/' . $row['image']) ?>">
                       <i class="fas fa-eye text-sm"></i>
                     </button>
                     <button onclick="openEditModal(<?= htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8') ?>)" class="w-9 h-9 flex items-center justify-center rounded-full text-blue-500 hover:bg-blue-100 transition-colors" title="Edit">
@@ -240,11 +280,11 @@
               </div>
             </div>
 
-            <!-- Hipotesis -->
+            <!-- Deskripsi -->
             <div class="flex flex-col min-h-0">
               <div class="border-l-4 border-blue-200 pl-4 overflow-y-auto pr-2">
-                <h4 class="font-semibold text-gray-800 mb-1">Hipotesis</h4>
-                <p id="modalHipotesis" class="text-gray-600 text-sm leading-relaxed italic"></p>
+                <h4 class="font-semibold text-gray-800 mb-1">Deskripsi</h4>
+                <p id="modalDeskripsi" class="text-gray-600 text-sm leading-relaxed italic"></p>
               </div>
             </div>
           </div>
@@ -298,8 +338,8 @@
             <input type="number" name="stok" id="add_stok" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" value="<?= old('stok') ?>" required>
           </div>
           <div class="col-span-2">
-            <label for="add_hipotesis" class="block text-sm font-medium text-gray-700">Hipotesis</label>
-            <textarea name="hipotesis" id="add_hipotesis" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3" required><?= old('hipotesis') ?></textarea>
+            <label for="add_deskripsi" class="block text-sm font-medium text-gray-700">Deskripsi</label>
+            <textarea name="deskripsi" id="add_deskripsi" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3" required><?= old('deskripsi') ?></textarea>
           </div>
           <div class="col-span-2">
             <label class="block text-sm font-medium text-gray-700">Cover Buku</label>
@@ -359,8 +399,8 @@
             <input type="number" name="stok" id="edit_stok" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
           </div>
           <div class="col-span-2">
-            <label for="edit_hipotesis" class="block text-sm font-medium text-gray-700">Hipotesis</label>
-            <textarea name="hipotesis" id="edit_hipotesis" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3" required></textarea>
+            <label for="edit_deskripsi" class="block text-sm font-medium text-gray-700">Deskripsi</label>
+            <textarea name="deskripsi" id="edit_deskripsi" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3" required></textarea>
           </div>
           <div class="col-span-2">
           <label class="block text-sm font-medium text-gray-700">Ganti Cover Buku (Opsional)</label>
@@ -417,7 +457,7 @@
       document.getElementById('edit_tahun_terbit').value = bookData.tahun_terbit;
       document.getElementById('edit_isbn').value = bookData.isbn;
       document.getElementById('edit_stok').value = bookData.stok;
-      document.getElementById('edit_hipotesis').value = bookData.hipotesis;
+      document.getElementById('edit_deskripsi').value = bookData.deskripsi;
       document.getElementById('edit_current_image').src = `<?= base_url('uploads/') ?>/${bookData.image}`;
 
       const modal = document.getElementById('editModal');
@@ -459,7 +499,7 @@
       stokElement.classList.add(stokText.toLowerCase().includes('kosong') ? 'text-red-600' : 'text-green-600');
 
       document.getElementById('modalKategori').textContent = getValue(element.dataset.kategori);
-      document.getElementById('modalHipotesis').innerText = getValue(element.dataset.hipotesis);
+      document.getElementById('modalDeskripsi').innerText = getValue(element.dataset.deskripsi);
       document.getElementById('modalImage').src = getValue(element.dataset.image);
 
       const modal = document.getElementById('detailModal');
