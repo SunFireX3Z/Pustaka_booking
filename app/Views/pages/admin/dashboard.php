@@ -54,50 +54,9 @@
 <body class="bg-gray-100 flex">
 
   <?php
-    $current_page = 'dashboard';
-    $active_class = 'bg-slate-800 text-white border-l-4 border-blue-500';
-    $inactive_class = 'text-slate-400 hover:bg-slate-800 hover:text-white transition-colors duration-200 border-l-4 border-transparent';
+    $current_page = 'dashboard'; // Set halaman aktif
+    echo view('pages/admin/template/sidebar', ['current_page' => $current_page]);
   ?>
-
-  <!-- Sidebar -->
-  <aside id="sidebar" class="fixed top-0 left-0 flex h-screen w-64 flex-col bg-slate-900 text-gray-200 transition-all duration-300">
-    <!-- Logo -->
-    <div class="flex items-center gap-3 p-4">
-      <a href="<?= base_url('dashboard') ?>" class="flex items-center gap-3">
-        <i class="fas fa-book-reader text-4xl text-blue-400"></i>
-        <div class="sidebar-logo-text">
-          <span class="text-white font-bold text-xl block">Pustaka</span>
-          <span class="text-slate-400 text-sm">App Perpustakaan</span>
-        </div>
-      </a>
-    </div>
-
-    <!-- Menu -->
-    <nav class="flex-1 space-y-2 p-4">
-      <h3 class="sidebar-menu-title px-3 text-xs font-semibold uppercase text-slate-500"><span class="sidebar-text">Menu Utama</span></h3>
-      <div class="flex flex-col space-y-1">
-        <a href="<?= base_url('dashboard') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $current_page === 'dashboard' ? $active_class : $inactive_class ?>">
-          <i class="fas fa-tachometer-alt w-5 text-center"></i> <span class="sidebar-text">Dashboard</span>
-        </a>
-        <a href="<?= base_url('anggota') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $current_page === 'anggota' ? $active_class : $inactive_class ?>">
-          <i class="fas fa-users w-5 text-center"></i> <span class="sidebar-text">Anggota</span>
-        </a>
-        <a href="<?= base_url('buku') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $current_page === 'buku' ? $active_class : $inactive_class ?>">
-          <i class="fas fa-book w-5 text-center"></i> <span class="sidebar-text">Buku</span>
-        </a>
-        <a href="<?= base_url('kategori') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $current_page === 'kategori' ? $active_class : $inactive_class ?>">
-          <i class="fas fa-tags w-5 text-center"></i> <span class="sidebar-text">Kategori</span>
-        </a>
-      </div>
-    </nav>
-
-    <!-- Logout -->
-    <div class="p-4">
-      <a href="<?= base_url('logout') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $inactive_class ?>">
-        <i class="fas fa-sign-out-alt w-5 text-center"></i> <span class="sidebar-text">Logout</span>
-      </a>
-    </div>
-  </aside>
 
   <!-- Main content -->
   <div id="main-content" class="flex-1 flex flex-col ml-64 transition-all duration-300">
@@ -108,24 +67,14 @@
         <button id="sidebar-toggle" class="text-gray-500 hover:text-gray-700 focus:outline-none mr-4"><i class="fas fa-bars text-lg"></i></button>
         <h1 class="text-xl font-semibold">Dashboard</h1>
       </div>
-      <div class="flex items-center space-x-3">
-        <?php 
-          $userImage = session()->get('image') ?? 'default.jpg';
-          $userName = session()->get('nama') ?? 'User';
-          $userRole = session()->get('role') ?? 'Peran';
-        ?>
-        <div class="text-right">
-          <span class="font-medium block text-sm"><?= esc($userName) ?></span>
-          <span class="text-xs text-gray-500 block"><?= esc($userRole) ?></span>
-        </div>
-        <img src="<?= base_url('uploads/' . $userImage) ?>" alt="User" class="w-8 h-8 rounded-full">
-      </div>
+      <?php echo view('pages/admin/template/header_user_profile'); ?>
     </header>
 
     <!-- Content -->
     <main class="p-6">
-      <!-- Welcome Banner -->
-      <div class="card-item relative bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-lg mb-8">
+      <div class="w-full max-w-7xl mx-auto">
+        <!-- Welcome Banner -->
+      <div class="card-item relative bg-gradient-to-r from-green-500 to-purple-600 text-white p-6 rounded-lg shadow-lg mb-8">
         <!-- Graphic from image_assets -->
         <img src="<?= base_url('image_assets/book.png') ?>" alt="Banner Graphic" class="absolute -bottom-11 right-4 w-[220px] h-auto hidden md:block pointer-events-none">
         
@@ -138,8 +87,8 @@
       <!-- Cards Statistik -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="stat-cards">
         <!-- Card Anggota -->
-        <div class="card-item bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border-l-4 border-transparent hover:border-blue-500 transition-all duration-300">
-          <div class="bg-gradient-to-br from-blue-400 to-blue-600 p-4 rounded-full shadow-lg">
+        <div class="card-item bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border-l-4 border-transparent hover:border-green-500 transition-all duration-300">
+          <div class="bg-gradient-to-br from-green-400 to-green-600 p-4 rounded-full shadow-lg">
             <i class="fas fa-users fa-2x text-white"></i>
           </div>
           <div>
@@ -185,7 +134,7 @@
         <div class="lg:col-span-3 flex flex-col">
           <div class="card-item flex justify-between items-center mb-4">
             <h4 class="text-xl font-semibold text-gray-700">Anggota Terbaru</h4>
-            <a href="<?= base_url('anggota') ?>" class="text-sm text-blue-600 hover:underline font-medium">Lihat Semua <i class="fas fa-arrow-right ml-1"></i></a>
+            <a href="<?= base_url('anggota') ?>" class="text-sm text-green-600 hover:underline font-medium">Lihat Semua <i class="fas fa-arrow-right ml-1"></i></a>
           </div>
           <div id="memberTableContainer" class="card-item overflow-x-auto bg-white rounded-lg shadow flex-grow">
             <table class="min-w-full text-sm text-left">
@@ -234,7 +183,7 @@
         <div class="lg:col-span-2">
           <div class="card-item flex justify-between items-center mb-4">
             <h4 class="text-xl font-semibold text-gray-700">Buku Baru Ditambahkan</h4>
-            <a href="<?= base_url('buku') ?>" class="text-sm text-blue-600 hover:underline font-medium">Lihat Semua <i class="fas fa-arrow-right ml-1"></i></a>
+            <a href="<?= base_url('buku') ?>" class="text-sm text-green-600 hover:underline font-medium">Lihat Semua <i class="fas fa-arrow-right ml-1"></i></a>
           </div>
           <?php if (!empty($buku)): ?>
             <div class="space-y-3">
@@ -295,7 +244,7 @@
           toolbar: { show: false },
         },
         labels: ['Tersedia', 'Dipinjam', 'Dibooking'],
-        colors: ['#3B82F6', '#EF4444', '#22C55E'], // blue-500, red-500, green-500
+        colors: ['#10B981', '#EF4444', '#f59e0b'], // emerald-500, red-500, amber-500
         plotOptions: {
           pie: {
             donut: {

@@ -1,98 +1,96 @@
 <?php
-
 namespace App\Controllers;
 
 use App\Models\KategoriModel;
-use App\Models\BukuModel;
 
 class Kategori extends BaseController
 {
-    protected $kategoriModel;
-    protected $bukuModel;
-
-    public function __construct()
-    {
-        $this->kategoriModel = new KategoriModel();
-        $this->bukuModel = new BukuModel();
-    }
-
     public function index()
     {
-        // Data untuk kartu statistik
-        $data['total_kategori'] = $this->kategoriModel->countAllResults();
+        $kategoriModel = new KategoriModel();
 
-        // Menemukan kategori terpopuler (berdasarkan jumlah judul buku)
-        $kategoriPopuler = $this->kategoriModel
-            ->select('kategori.nama_kategori as nama, COUNT(buku.id) as jumlah_buku')
-            ->join('buku', 'buku.id_kategori = kategori.id_kategori', 'left')
-            ->groupBy('kategori.id_kategori, kategori.nama_kategori')
-            ->orderBy('jumlah_buku', 'DESC')
-            ->first();
-        $data['kategori_populer'] = $kategoriPopuler ?? ['nama' => 'Belum ada data'];
-
-        // Mengambil semua kategori beserta jumlah buku dan cover acak
-        $kategoriList = $this->kategoriModel
-            ->select('kategori.*, COUNT(buku.id) as jumlah_buku')
-            ->join('buku', 'buku.id_kategori = kategori.id_kategori', 'left')
+        // Query yang diperbaiki: Join dengan tabel pivot 'buku_kategori'
+        $data['kategori'] = $kategoriModel
+            ->select('kategori.*, COUNT(buku_kategori.buku_id) as jumlah_buku')
+            ->join('buku_kategori', 'buku_kategori.kategori_id = kategori.id_kategori', 'left')
             ->groupBy('kategori.id_kategori')
             ->orderBy('kategori.nama_kategori', 'ASC')
             ->findAll();
 
-        // Menambahkan cover acak untuk setiap kategori yang memiliki buku
-        foreach ($kategoriList as &$k) {
-            if ($k['jumlah_buku'] > 0) {
-                $randomBook = $this->bukuModel->where('id_kategori', $k['id_kategori'])->orderBy('RAND()')->first();
-                $k['random_cover'] = $randomBook['image'] ?? 'default.png';
-            } else {
-                $k['random_cover'] = 'default.png';
+        $data['total_kategori'] = count($data['kategori']);
+
+        // Menentukan kategori terpopuler
+        $kategori_populer = ['nama' => 'Belum ada', 'jumlah' => 0];
+        if (!empty($data['kategori'])) {
+            $kategori_populer['nama'] = $data['kategori'][0]['nama_kategori'];
+            $kategori_populer['jumlah'] = $data['kategori'][0]['jumlah_buku'];
+            foreach ($data['kategori'] as $k) {
+                if ($k['jumlah_buku'] > $kategori_populer['jumlah']) {
+                    $kategori_populer['nama'] = $k['nama_kategori'];
+                    $kategori_populer['jumlah'] = $k['jumlah_buku'];
+                }
             }
         }
-        $data['kategori'] = $kategoriList;
+        $data['kategori_populer'] = $kategori_populer;
+
+        $data['validation'] = \Config\Services::validation();
 
         return view('pages/admin/kategori', $data);
     }
 
     public function create()
     {
-        $validation = \Config\Services::validation();
-        $validation->setRules(['nama_kategori' => 'required|is_unique[kategori.nama_kategori]']);
+        $kategoriModel = new KategoriModel();
 
-        if (!$validation->withRequest($this->request)->run()) {
-            return redirect()->to('/kategori')->withInput()->with('validation', $validation)->with('show_modal', 'add');
+        $rules = [
+            'nama_kategori' => 'required|is_unique[kategori.nama_kategori]'
+        ];
+
+        if (!$this->validate($rules)) {
+            // Jika validasi gagal, kembali ke halaman sebelumnya dengan error
+            // dan data input agar modal bisa terbuka kembali dengan error.
+            return redirect()->to('/kategori')->withInput()->with('validation', $this->validator);
         }
 
-        $this->kategoriModel->save([
+        // Simpan data jika validasi berhasil
+        $kategoriModel->save([
             'nama_kategori' => $this->request->getPost('nama_kategori')
         ]);
 
-        return redirect()->to('/kategori')->with('success', 'Kategori berhasil ditambahkan.');
+        session()->setFlashdata('success', 'Kategori berhasil ditambahkan.');
+        return redirect()->to('/kategori');
     }
 
     public function update($id)
     {
-        $validation = \Config\Services::validation();
-        $validation->setRules(['nama_kategori' => "required|is_unique[kategori.nama_kategori,id_kategori,{$id}]"]);
+        $kategoriModel = new KategoriModel();
 
-        if (!$validation->withRequest($this->request)->run()) {
-            return redirect()->to('/kategori')->withInput()->with('validation', $validation)->with('show_modal', 'edit')->with('edit_id', $id);
+        $rules = [
+            'nama_kategori' => "required|is_unique[kategori.nama_kategori,id_kategori,{$id}]"
+        ];
+
+        if (!$this->validate($rules)) {
+            // Jika validasi gagal, kembali dengan error.
+            return redirect()->to('/kategori')->withInput()->with('validation', $this->validator);
         }
 
-        $this->kategoriModel->update($id, [
+        // Update data jika validasi berhasil
+        $kategoriModel->save([
+            'id_kategori'   => $id,
             'nama_kategori' => $this->request->getPost('nama_kategori')
         ]);
 
-        return redirect()->to('/kategori')->with('success', 'Kategori berhasil diperbarui.');
+        session()->setFlashdata('success', 'Kategori berhasil diperbarui.');
+        return redirect()->to('/kategori');
     }
-
     public function delete($id)
     {
-        // Cek apakah ada buku yang menggunakan kategori ini
-        $bukuTerkait = $this->bukuModel->where('id_kategori', $id)->countAllResults();
-        if ($bukuTerkait > 0) {
-            return redirect()->to('/kategori')->with('error', 'Gagal menghapus! Kategori ini masih digunakan oleh ' . $bukuTerkait . ' buku.');
+        $kategoriModel = new KategoriModel();
+        if ($kategoriModel->isUsed($id)) {
+            return redirect()->to('/kategori')->with('error', 'Gagal menghapus! Kategori ini masih digunakan oleh beberapa buku.');
         }
-
-        $this->kategoriModel->delete($id);
-        return redirect()->to('/kategori')->with('success', 'Kategori berhasil dihapus.');
+        $kategoriModel->delete($id);
+        session()->setFlashdata('success', 'Kategori berhasil dihapus.');
+        return redirect()->to('/kategori');
     }
 }

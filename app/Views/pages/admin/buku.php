@@ -5,14 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Daftar Buku</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome -->
+  <!-- ApexCharts -->
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Tom Select -->
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
   <style>
     .modal-enter { opacity: 0; transform: translateY(-20px); }
     .modal-enter-active { opacity: 1; transform: translateY(0); transition: all 0.3s ease-out; }
     .modal-leave { opacity: 1; transform: translateY(0); }
     .modal-leave-active { opacity: 0; transform: translateY(-20px); transition: all 0.2s ease-in; }
 
+    /* Animasi untuk SweetAlert2 Toast */
+    @keyframes toast-in-right {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0); 
+        opacity: 1;
+      }
+    }
+    .swal2-show.swal2-toast {
+      animation: toast-in-right 0.5s;
+    }
+    .swal2-hide.swal2-toast {
+      animation: none; /* Biarkan SweetAlert menangani animasi keluar */
+    }
+  </style>
+  <style>
     .card-item {
       opacity: 0;
       transform: translateY(20px);
@@ -55,77 +77,26 @@
 <body class="bg-gray-100 flex">
 
   <?php
-    $current_page = 'buku';
-    $active_class = 'bg-slate-800 text-white border-l-4 border-blue-500';
-    $inactive_class = 'text-slate-400 hover:bg-slate-800 hover:text-white transition-colors duration-200 border-l-4 border-transparent';
+    $current_page = 'buku'; // Set halaman aktif
+    echo view('pages/admin/template/sidebar', ['current_page' => $current_page]);
   ?>
-
-  <!-- Sidebar -->
-  <aside id="sidebar" class="fixed top-0 left-0 flex h-screen w-64 flex-col bg-slate-900 text-gray-200 transition-all duration-300">
-    <!-- Logo -->
-    <div class="flex items-center gap-3 p-4">
-      <a href="<?= base_url('dashboard') ?>" class="flex items-center gap-3">
-        <i class="fas fa-book-reader text-4xl text-blue-400"></i>
-        <div class="sidebar-logo-text">
-          <span class="text-white font-bold text-xl block">Pustaka</span>
-          <span class="text-slate-400 text-sm">App Perpustakaan</span>
-        </div>
-      </a>
-    </div>
-
-    <!-- Menu -->
-    <nav class="flex-1 space-y-2 p-4">
-      <h3 class="sidebar-menu-title px-3 text-xs font-semibold uppercase text-slate-500"><span class="sidebar-text">Menu Utama</span></h3>
-      <div class="flex flex-col space-y-1">
-        <a href="<?= base_url('dashboard') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $current_page === 'dashboard' ? $active_class : $inactive_class ?>">
-          <i class="fas fa-tachometer-alt w-5 text-center"></i> <span class="sidebar-text">Dashboard</span>
-        </a>
-        <a href="<?= base_url('anggota') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $current_page === 'anggota' ? $active_class : $inactive_class ?>">
-          <i class="fas fa-users w-5 text-center"></i> <span class="sidebar-text">Anggota</span>
-        </a>
-        <a href="<?= base_url('buku') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $current_page === 'buku' ? $active_class : $inactive_class ?>">
-          <i class="fas fa-book w-5 text-center"></i> <span class="sidebar-text">Buku</span>
-        </a>
-        <a href="<?= base_url('kategori') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $current_page === 'kategori' ? $active_class : $inactive_class ?>">
-          <i class="fas fa-tags w-5 text-center"></i> <span class="sidebar-text">Kategori</span>
-        </a>
-      </div>
-    </nav>
-
-    <!-- Logout -->
-    <div class="p-4">
-      <a href="<?= base_url('logout') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $inactive_class ?>">
-        <i class="fas fa-sign-out-alt w-5 text-center"></i> <span class="sidebar-text">Logout</span>
-      </a>
-    </div>
-  </aside>
 
   <!-- Main content -->
   <div id="main-content" class="flex-1 flex flex-col ml-64 transition-all duration-300">
 
     <!-- Header -->
-    <header class="bg-white shadow-sm p-4 flex justify-between items-center">
+    <header class="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-30">
       <div class="flex items-center">
         <button id="sidebar-toggle" class="text-gray-500 hover:text-gray-700 focus:outline-none mr-4"><i class="fas fa-bars text-lg"></i></button>
         <h1 class="text-xl font-semibold">Daftar Buku</h1>
       </div>
-      <div class="flex items-center space-x-3">
-        <?php 
-          $userImage = session()->get('image') ?? 'default.jpg';
-          $userName = session()->get('nama') ?? 'User';
-          $userRole = session()->get('role') ?? 'Peran';
-        ?>
-        <div class="text-right">
-          <span class="font-medium block text-sm"><?= esc($userName) ?></span>
-          <span class="text-xs text-gray-500 block"><?= esc($userRole) ?></span>
-        </div>
-        <img src="<?= base_url('uploads/' . $userImage) ?>" alt="User" class="w-8 h-8 rounded-full">
-      </div>
+      <?= view('pages/admin/template/header_user_profile'); ?>
     </header>
 
     <!-- Content -->
     <main class="p-6">
-      <!-- Kartu Statistik -->
+      <div class="w-full max-w-7xl mx-auto">
+        <!-- Kartu Statistik -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <!-- Total Judul Buku -->
         <div class="card-item bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border-l-4 border-purple-500">
@@ -152,7 +123,7 @@
       <div class="card-item bg-white p-4 rounded-lg shadow-sm mb-6">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 class="text-2xl font-bold text-blue-600">Daftar Buku Perpustakaan</h2>
+            <h2 class="text-2xl font-bold text-green-600">Daftar Buku Perpustakaan</h2>
             <p class="text-sm text-gray-500 mt-1">Kelola dan lihat koleksi buku yang tersedia.</p>
           </div>
           <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
@@ -161,19 +132,17 @@
                 <i class="fas fa-search text-gray-400"></i>
               </span>
               <input type="text" id="searchFilter" placeholder="Cari judul atau pengarang..." 
-                     class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                     class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
             </div>
-            <select id="categoryFilter" class="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            <select id="categoryFilter" class="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
               <option value="all">Semua Kategori</option>
               <?php
-                $categoryNames = array_keys($groupedBooks);
-                sort($categoryNames);
-                foreach ($categoryNames as $categoryName):
+                foreach ($kategori as $kat):
               ?>
-                <option value="<?= esc($categoryName) ?>"><?= esc($categoryName) ?></option>
+                <option value="<?= esc($kat['nama_kategori']) ?>"><?= esc($kat['nama_kategori']) ?></option>
               <?php endforeach; ?>
             </select>
-            <button onclick="openAddModal()" class="flex-shrink-0 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center">
+            <button onclick="openAddModal()" class="flex-shrink-0 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center">
                 <i class="fas fa-plus mr-2"></i> Tambah Buku
             </button>
           </div>
@@ -187,18 +156,18 @@
         </div>
       <?php endif; ?>
 
-      <?php if (!empty($groupedBooks)): ?>
+      <?php if (!empty($buku)): ?>
         <div id="bookListContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <?php foreach ($groupedBooks as $categoryName => $booksInCategory): ?>
-            <?php foreach ($booksInCategory as $row): ?>
-              <div class="book-item card-item bg-white rounded-lg shadow-sm overflow-hidden flex items-center transition-all duration-300 hover:shadow-lg" data-category="<?= esc($categoryName) ?>">
+            <?php foreach ($buku as $row): ?>
+              <div class="book-item card-item bg-white rounded-lg shadow-sm overflow-hidden flex items-center transition-all duration-300 hover:shadow-lg" data-category="<?= esc($row['kategori_nama']) ?>">
                 <!-- Gambar -->
                 <img src="<?= base_url('uploads/' . $row['image']) ?>" alt="Cover: <?= esc($row['judul_buku']) ?>" class="w-24 h-auto object-contain flex-shrink-0">
                 
                 <!-- Info Buku -->
                 <div class="p-4 flex-grow flex flex-col sm:flex-row justify-between items-start">
                   <div class="flex-grow">
-                    <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full mb-1"><?= esc($categoryName) ?></span>
+                    <div class="text-xs font-semibold text-green-800 mb-1 flex flex-wrap gap-1">
+                      <?php foreach(explode(', ', $row['kategori_nama']) as $kat): ?><span class="bg-green-100 px-2 py-0.5 rounded-full"><?= esc($kat) ?></span><?php endforeach; ?></div>
                     <h3 class="text-lg font-bold text-gray-800 leading-tight"><?= esc($row['judul_buku']) ?></h3>
                     <p class="text-sm text-gray-500">Oleh: <?= esc($row['pengarang']) ?></p>
                     <div class="text-xs text-gray-500 mt-2 flex items-center gap-3">
@@ -212,11 +181,14 @@
                   
                   <!-- Tombol Aksi -->
                   <div class="flex-shrink-0 flex items-center gap-2 mt-3 sm:mt-0">
+                    <a href="<?= base_url('buku/qrcode/' . $row['id']) ?>" target="_blank" class="w-9 h-9 flex items-center justify-center rounded-full text-blue-500 hover:bg-blue-100 transition-colors" title="Tampilkan QR Code">
+                      <i class="fas fa-qrcode text-sm"></i>
+                    </a>
                     <button onclick="showDetail(this)" class="w-9 h-9 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors" title="Lihat Detail"
-                      data-judul="<?= esc($row['judul_buku']) ?>" data-penerbit="<?= esc($row['penerbit']) ?>" data-pengarang="<?= esc($row['pengarang']) ?>" data-tahun="<?= esc($row['tahun_terbit']) ?>" data-stok="<?= esc($row['stok']) > 0 ? $row['stok'] . ' Tersedia' : 'Kosong' ?>" data-kategori="<?= esc($row['nama_kategori'] ?? 'Tidak ada kategori') ?>" data-deskripsi="<?= esc($row['deskripsi'] ?? '-') ?>" data-image="<?= base_url('uploads/' . $row['image']) ?>">
+                      data-judul="<?= esc($row['judul_buku']) ?>" data-penerbit="<?= esc($row['penerbit']) ?>" data-pengarang="<?= esc($row['pengarang']) ?>" data-tahun="<?= esc($row['tahun_terbit']) ?>" data-stok="<?= esc($row['stok']) > 0 ? $row['stok'] . ' Tersedia' : 'Kosong' ?>" data-kategori="<?= esc($row['kategori_nama'] ?? 'Tidak ada kategori') ?>" data-deskripsi="<?= esc($row['deskripsi'] ?? '-') ?>" data-image="<?= base_url('uploads/' . $row['image']) ?>" data-pdf="<?= !empty($row['file_pdf']) ? base_url('uploads/pdf/' . esc($row['file_pdf'])) : '' ?>" data-eisbn="<?= esc($row['eisbn'] ?? '-') ?>">
                       <i class="fas fa-eye text-sm"></i>
                     </button>
-                    <button onclick="openEditModal(<?= htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8') ?>)" class="w-9 h-9 flex items-center justify-center rounded-full text-blue-500 hover:bg-blue-100 transition-colors" title="Edit">
+                    <button onclick="openEditModal(<?= htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8') ?>)" class="w-9 h-9 flex items-center justify-center rounded-full text-green-500 hover:bg-green-100 transition-colors" title="Edit">
                       <i class="fas fa-edit text-sm"></i>
                     </button>
                     <a href="<?= base_url('buku/delete/' . $row['id']) ?>" onclick="return confirm('Apakah Anda yakin ingin menghapus buku ini?')" class="w-9 h-9 flex items-center justify-center rounded-full text-red-500 hover:bg-red-100 transition-colors" title="Hapus">
@@ -225,12 +197,18 @@
                   </div>
                 </div>
               </div>
-            <?php endforeach; ?>
           <?php endforeach; ?>
         </div>
       <?php else: ?>
-        <p class="text-center text-gray-500">Belum ada data buku.</p>
+        <div class="card-item bg-white rounded-lg shadow-sm p-12 text-center">
+          <div class="flex justify-center items-center mb-4">
+            <i class="fas fa-book-dead text-5xl text-gray-300"></i>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-700">Belum Ada Buku</h3>
+          <p class="text-gray-500 mt-2">Tidak ada data buku yang dapat ditampilkan. Silakan tambahkan buku baru.</p>
+        </div>
       <?php endif; ?>
+      </div>
     </main>
   </div>
 
@@ -251,12 +229,14 @@
         <!-- Kolom Kanan untuk Konten -->
         <div class="w-full md:w-2/3 p-8 md:p-10 flex flex-col">
           <div class="flex-grow">
-            <span id="modalKategori" class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full mb-3"></span>
+            <div id="modalKategori" class="text-xs font-semibold text-green-800 mb-3 flex flex-wrap gap-1">
+              <!-- Kategori akan diisi oleh JS -->
+            </div>
             <h2 id="modalJudul" class="text-4xl font-bold text-gray-900 mb-2 leading-tight"></h2>
             <p id="modalPengarang" class="text-gray-500 text-lg mb-6"></p>
             
             <!-- Detail Meta -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 text-sm">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 mb-8 text-sm">
               <div class="flex items-center gap-3">
                 <i class="fas fa-building fa-fw text-gray-400 text-xl"></i>
                 <div>
@@ -272,21 +252,34 @@
                 </div>
               </div>
               <div class="flex items-center gap-3">
-                <i class="fas fa-box-open fa-fw text-gray-400 text-xl"></i>
+                <i class="fas fa-box-open fa-fw text-gray-400 text-xl"></i> 
                 <div>
                   <p class="text-gray-500">Stok</p>
                   <p id="modalStok" class="font-semibold"></p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-barcode fa-fw text-gray-400 text-xl"></i> 
+                <div>
+                  <p class="text-gray-500">EISBN</p>
+                  <p id="modalEisbn" class="font-semibold"></p>
                 </div>
               </div>
             </div>
 
             <!-- Deskripsi -->
             <div class="flex flex-col min-h-0">
-              <div class="border-l-4 border-blue-200 pl-4 overflow-y-auto pr-2">
+              <div class="border-l-4 border-green-200 pl-4 overflow-y-auto pr-2">
                 <h4 class="font-semibold text-gray-800 mb-1">Deskripsi</h4>
                 <p id="modalDeskripsi" class="text-gray-600 text-sm leading-relaxed italic"></p>
               </div>
             </div>
+          </div>
+          <!-- Tombol Aksi Modal -->
+          <div class="p-6 bg-gray-50 rounded-b-lg flex justify-end space-x-3">
+            <a id="readPdfButton" href="#" target="_blank" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 shadow-sm flex items-center gap-2" style="display: none;">
+              <i class="fas fa-file-pdf"></i> Baca PDF
+            </a>
           </div>
         </div>
       </div>
@@ -306,49 +299,52 @@
         <div class="grid grid-cols-2 gap-x-4 gap-y-3">
           <div class="col-span-2">
             <label for="add_judul_buku" class="block text-sm font-medium text-gray-700">Judul Buku</label>
-            <input type="text" name="judul_buku" id="add_judul_buku" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" value="<?= old('judul_buku') ?>" required>
+            <input type="text" name="judul_buku" id="add_judul_buku" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" value="<?= old('judul_buku') ?>" required>
           </div>
-          <div>
-            <label for="add_id_kategori" class="block text-sm font-medium text-gray-700">Kategori</label>
-            <select name="id_kategori" id="add_id_kategori" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
-              <option value="">Pilih Kategori</option>
-              <?php foreach($kategori as $k): ?>
-                <option value="<?= $k['id_kategori'] ?>" <?= old('id_kategori') == $k['id_kategori'] ? 'selected' : '' ?>><?= esc($k['nama_kategori']) ?></option>
-              <?php endforeach; ?>
-            </select>
+          <div class="col-span-2" id="add-kategori-wrapper">
+            <label for="add_kategori_ids" class="block text-sm font-medium text-gray-700">Kategori</label>
+            <select id="add_kategori_ids" name="kategori_ids[]" multiple placeholder="Pilih satu atau lebih kategori..." required></select>
           </div>
           <div>
             <label for="add_pengarang" class="block text-sm font-medium text-gray-700">Pengarang</label>
-            <input type="text" name="pengarang" id="add_pengarang" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" value="<?= old('pengarang') ?>" required>
+            <input type="text" name="pengarang" id="add_pengarang" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" value="<?= old('pengarang') ?>" required>
           </div>
           <div>
             <label for="add_penerbit" class="block text-sm font-medium text-gray-700">Penerbit</label>
-            <input type="text" name="penerbit" id="add_penerbit" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" value="<?= old('penerbit') ?>" required>
+            <input type="text" name="penerbit" id="add_penerbit" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" value="<?= old('penerbit') ?>" required>
           </div>
           <div>
             <label for="add_tahun_terbit" class="block text-sm font-medium text-gray-700">Tahun Terbit</label>
-            <input type="number" name="tahun_terbit" id="add_tahun_terbit" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" value="<?= old('tahun_terbit') ?>" required>
+            <input type="number" name="tahun_terbit" id="add_tahun_terbit" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" value="<?= old('tahun_terbit') ?>" required>
           </div>
           <div>
             <label for="add_isbn" class="block text-sm font-medium text-gray-700">ISBN</label>
-            <input type="text" name="isbn" id="add_isbn" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" value="<?= old('isbn') ?>" required>
+            <input type="text" name="isbn" id="add_isbn" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" value="<?= old('isbn') ?>" required>
+          </div>
+          <div>
+            <label for="add_eisbn" class="block text-sm font-medium text-gray-700">EISBN (Opsional)</label>
+            <input type="text" name="eisbn" id="add_eisbn" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" value="<?= old('eisbn') ?>">
           </div>
           <div>
             <label for="add_stok" class="block text-sm font-medium text-gray-700">Stok</label>
-            <input type="number" name="stok" id="add_stok" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" value="<?= old('stok') ?>" required>
+            <input type="number" name="stok" id="add_stok" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" value="<?= old('stok') ?>" required>
           </div>
           <div class="col-span-2">
             <label for="add_deskripsi" class="block text-sm font-medium text-gray-700">Deskripsi</label>
-            <textarea name="deskripsi" id="add_deskripsi" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3" required><?= old('deskripsi') ?></textarea>
+            <textarea name="deskripsi" id="add_deskripsi" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" rows="3" required><?= old('deskripsi') ?></textarea>
           </div>
           <div class="col-span-2">
             <label class="block text-sm font-medium text-gray-700">Cover Buku</label>
-            <input type="file" name="image" class="mt-1 w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+            <input type="file" name="image" class="mt-1 w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" required>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-sm font-medium text-gray-700">File PDF (Opsional)</label>
+            <input type="file" name="file_pdf" class="mt-1 w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
           </div>
         </div>
         <div class="flex justify-end space-x-2 pt-5">
           <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">Batal</button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow-sm hover:shadow-md transition-all">Simpan</button>
+          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 shadow-sm hover:shadow-md transition-all">Simpan</button>
         </div>
       </form>
     </div>
@@ -367,58 +363,65 @@
         <div class="grid grid-cols-2 gap-x-4 gap-y-3">
           <div class="col-span-2">
             <label for="edit_judul_buku" class="block text-sm font-medium text-gray-700">Judul Buku</label>
-            <input type="text" name="judul_buku" id="edit_judul_buku" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+            <input type="text" name="judul_buku" id="edit_judul_buku" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" required>
           </div>
-          <div>
-            <label for="edit_id_kategori" class="block text-sm font-medium text-gray-700">Kategori</label>
-            <select name="id_kategori" id="edit_id_kategori" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
-              <option value="">Pilih Kategori</option>
-              <?php foreach($kategori as $k): ?>
-                <option value="<?= $k['id_kategori'] ?>"><?= esc($k['nama_kategori']) ?></option>
-              <?php endforeach; ?>
-            </select>
+          <div class="col-span-2" id="edit-kategori-wrapper">
+            <label for="edit_kategori_ids" class="block text-sm font-medium text-gray-700">Kategori</label>
+            <select id="edit_kategori_ids" name="kategori_ids[]" multiple placeholder="Pilih satu atau lebih kategori..." required></select>
           </div>
           <div>
             <label for="edit_pengarang" class="block text-sm font-medium text-gray-700">Pengarang</label>
-            <input type="text" name="pengarang" id="edit_pengarang" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+            <input type="text" name="pengarang" id="edit_pengarang" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" required>
           </div>
           <div>
             <label for="edit_penerbit" class="block text-sm font-medium text-gray-700">Penerbit</label>
-            <input type="text" name="penerbit" id="edit_penerbit" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+            <input type="text" name="penerbit" id="edit_penerbit" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" required>
           </div>
           <div>
             <label for="edit_tahun_terbit" class="block text-sm font-medium text-gray-700">Tahun Terbit</label>
-            <input type="number" name="tahun_terbit" id="edit_tahun_terbit" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+            <input type="number" name="tahun_terbit" id="edit_tahun_terbit" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" required>
           </div>
           <div>
             <label for="edit_isbn" class="block text-sm font-medium text-gray-700">ISBN</label>
-            <input type="text" name="isbn" id="edit_isbn" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+            <input type="text" name="isbn" id="edit_isbn" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" required>
+          </div>
+          <div>
+            <label for="edit_eisbn" class="block text-sm font-medium text-gray-700">EISBN (Opsional)</label>
+            <input type="text" name="eisbn" id="edit_eisbn" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
           </div>
           <div>
             <label for="edit_stok" class="block text-sm font-medium text-gray-700">Stok</label>
-            <input type="number" name="stok" id="edit_stok" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+            <input type="number" name="stok" id="edit_stok" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" required>
           </div>
           <div class="col-span-2">
             <label for="edit_deskripsi" class="block text-sm font-medium text-gray-700">Deskripsi</label>
-            <textarea name="deskripsi" id="edit_deskripsi" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3" required></textarea>
+            <textarea name="deskripsi" id="edit_deskripsi" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" rows="3" required></textarea>
           </div>
           <div class="col-span-2">
           <label class="block text-sm font-medium text-gray-700">Ganti Cover Buku (Opsional)</label>
           <div class="flex items-center gap-4 mt-1">
             <img id="edit_current_image" src="" alt="Current Cover" class="w-16 h-20 object-cover rounded bg-gray-100">
-            <input type="file" name="image" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            <input type="file" name="image" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+          </div>
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium text-gray-700">Ganti File PDF (Opsional)</label>
+          <div class="mt-1">
+            <input type="file" name="file_pdf" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+            <p id="current_pdf_file" class="text-xs text-gray-500 mt-1">File saat ini: <a href="#" target="_blank" class="text-green-600 hover:underline"></a></p>
           </div>
         </div>
         </div>
         <div class="flex justify-end space-x-2 pt-5">
           <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">Batal</button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow-sm hover:shadow-md transition-all">Simpan Perubahan</button>
+          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 shadow-sm hover:shadow-md transition-all">Simpan Perubahan</button>
         </div>
       </form>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
   <script>
     function openAddModal() {
       const modal = document.getElementById('addModal');
@@ -431,6 +434,8 @@
         content.classList.remove('modal-enter');
         content.classList.add('modal-enter-active');
       }, 10);
+      // Reset Tom Select
+      if (window.tomSelectAdd) window.tomSelectAdd.clear();
     }
 
     function closeAddModal() {
@@ -450,15 +455,29 @@
       document.getElementById('editForm').action = `<?= base_url('buku/update/') ?>/${bookData.id}`;
 
       // Populate form fields
+      const kategoriIds = bookData.kategori_ids ? bookData.kategori_ids.split(',') : [];
+      if (window.tomSelectEdit) window.tomSelectEdit.setValue(kategoriIds);
+
       document.getElementById('edit_judul_buku').value = bookData.judul_buku;
-      document.getElementById('edit_id_kategori').value = bookData.id_kategori;
       document.getElementById('edit_pengarang').value = bookData.pengarang;
       document.getElementById('edit_penerbit').value = bookData.penerbit;
       document.getElementById('edit_tahun_terbit').value = bookData.tahun_terbit;
       document.getElementById('edit_isbn').value = bookData.isbn;
+      document.getElementById('edit_eisbn').value = bookData.eisbn || '';
       document.getElementById('edit_stok').value = bookData.stok;
       document.getElementById('edit_deskripsi').value = bookData.deskripsi;
       document.getElementById('edit_current_image').src = `<?= base_url('uploads/') ?>/${bookData.image}`;
+
+      // Handle PDF file info
+      const pdfInfo = document.getElementById('current_pdf_file');
+      const pdfLink = pdfInfo.querySelector('a');
+      if (bookData.file_pdf) {
+        pdfLink.href = `<?= base_url('uploads/pdf/') ?>/${bookData.file_pdf}`;
+        pdfLink.textContent = bookData.file_pdf;
+        pdfInfo.style.display = 'block';
+      } else {
+        pdfInfo.style.display = 'none';
+      }
 
       const modal = document.getElementById('editModal');
       const content = document.getElementById('editModalContent');
@@ -498,9 +517,28 @@
       stokElement.className = 'font-semibold'; // Reset class
       stokElement.classList.add(stokText.toLowerCase().includes('kosong') ? 'text-red-600' : 'text-green-600');
 
-      document.getElementById('modalKategori').textContent = getValue(element.dataset.kategori);
+      const kategoriContainer = document.getElementById('modalKategori');
+      kategoriContainer.innerHTML = ''; // Kosongkan dulu
+      const kategoriList = getValue(element.dataset.kategori).split(', ');
+      kategoriList.forEach(kat => {
+          const span = document.createElement('span');
+          span.className = 'bg-green-100 px-2.5 py-1 rounded-full';
+          span.textContent = kat;
+          kategoriContainer.appendChild(span);
+      });
       document.getElementById('modalDeskripsi').innerText = getValue(element.dataset.deskripsi);
       document.getElementById('modalImage').src = getValue(element.dataset.image);
+      document.getElementById('modalEisbn').innerText = getValue(element.dataset.eisbn);
+
+      // Handle PDF button in detail modal
+      const pdfUrl = element.dataset.pdf;
+      const readPdfButton = document.getElementById('readPdfButton');
+      if (pdfUrl) {
+          readPdfButton.href = pdfUrl;
+          readPdfButton.style.display = 'flex';
+      } else {
+          readPdfButton.style.display = 'none';
+      }
 
       const modal = document.getElementById('detailModal');
       const content = document.getElementById('modalContent');
@@ -535,31 +573,30 @@
     <?php endif; ?>
 
     // Jika ada error validasi saat edit, otomatis buka modal edit
-    <?php if ($edit_id = session()->getFlashdata('show_edit_modal')): ?>
-      openEditModal(<?= json_encode(array_values(array_filter($buku, fn($b) => $b['id'] == $edit_id))[0] ?? null) ?>);
+    <?php
+      $bookToEdit = session()->getFlashdata('book_to_edit');
+      if ($bookToEdit):
+    ?>
+      openEditModal(<?= json_encode($bookToEdit) ?>);
     <?php endif; ?>
 
     // Tampilkan notifikasi toast dengan SweetAlert2
-    const Toast = Swal.mixin({
+    const AnimatedToast = Swal.mixin({
       toast: true,
       position: 'top-end',
       showConfirmButton: false,
       timer: 3000,
       timerProgressBar: true,
-      didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-      }
     });
 
     <?php if (session()->getFlashdata('success')): ?>
-      Toast.fire({
+      AnimatedToast.fire({
         icon: 'success',
         title: '<?= session()->getFlashdata('success') ?>'
       })
     <?php endif; ?>
     <?php if (session()->getFlashdata('error') || session()->getFlashdata('error_upload')): ?>
-      Toast.fire({
+      AnimatedToast.fire({
         icon: 'error',
         title: '<?= session()->getFlashdata('error') ?? session()->getFlashdata('error_upload') ?>'
       })
@@ -589,8 +626,8 @@
         const bookTitle = item.querySelector('h3').textContent.toLowerCase();
         const bookAuthor = item.querySelector('p').textContent.toLowerCase();
 
-        const categoryMatch = (selectedCategory === 'all' || itemCategory === selectedCategory);
-        const searchMatch = (searchQuery === '' || bookTitle.includes(searchQuery) || bookAuthor.includes(searchQuery));
+        const categoryMatch = (selectedCategory === 'all' || itemCategory.toLowerCase().includes(selectedCategory.toLowerCase()));
+        const searchMatch = (searchQuery === '' || bookTitle.includes(searchQuery) || bookAuthor.includes(searchQuery) || itemCategory.toLowerCase().includes(searchQuery));
 
         if (categoryMatch && searchMatch) {
           item.style.display = 'flex';
@@ -606,21 +643,32 @@
     categoryFilter.addEventListener('change', applyFilters);
     searchFilter.addEventListener('input', applyFilters);
 
-
-
-
     // Sidebar Toggle
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('main-content');
     const sidebarToggle = document.getElementById('sidebar-toggle');
 
     sidebarToggle.addEventListener('click', () => {
       document.documentElement.classList.toggle('sidebar-is-collapsed');
-
-      const isCollapsed = document.documentElement.classList.contains('sidebar-is-collapsed');
-      localStorage.setItem('sidebarCollapsed', isCollapsed);
+      localStorage.setItem('sidebarCollapsed', document.documentElement.classList.contains('sidebar-is-collapsed'));
     });
 
+    // Inisialisasi Tom Select
+    document.addEventListener('DOMContentLoaded', function() {
+      const kategoriOptions = <?= json_encode(array_map(function($k) {
+          return ['value' => $k['id_kategori'], 'text' => esc($k['nama_kategori'])];
+      }, $kategori)) ?>;
+
+      window.tomSelectAdd = new TomSelect('#add_kategori_ids', {
+        options: kategoriOptions,
+        plugins: ['remove_button'],
+        create: false,
+      });
+
+      window.tomSelectEdit = new TomSelect('#edit_kategori_ids', {
+        options: kategoriOptions,
+        plugins: ['remove_button'],
+        create: false,
+      });
+    });
   </script>
 </body>
-</html
+</html>

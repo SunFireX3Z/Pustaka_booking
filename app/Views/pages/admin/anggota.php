@@ -5,22 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Daftar Anggota</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="<?= base_url('css/style.css') ?>">
+  <!-- ApexCharts -->
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    .sidebar-is-collapsed #sidebar { width: 4rem; }
-    .card-item {
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.4s ease-out, transform 0.4s ease-out;
-    }
-    .card-item.is-visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
     /* Custom Scrollbar */
      ::-webkit-scrollbar {
       width: 6px;
@@ -36,6 +26,36 @@
      ::-webkit-scrollbar-thumb:hover {
       background: #94a3b8; /* slate-400 */
      }
+
+    /* Animasi untuk SweetAlert2 Toast */
+    @keyframes toast-in-right {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    .swal2-show.swal2-toast {
+      animation: toast-in-right 0.5s;
+    }
+    .swal2-hide.swal2-toast {
+      animation: none; /* Biarkan SweetAlert menangani animasi keluar */
+    }
+  </style>
+  <style>
+    .card-item {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    }
+    .card-item.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .sidebar-is-collapsed #sidebar { width: 4rem; }
     .sidebar-is-collapsed #sidebar .sidebar-text { display: none; }
     .sidebar-is-collapsed #sidebar .sidebar-logo-text { display: none; }
     .sidebar-is-collapsed #sidebar .sidebar-menu-title { text-align: center; }
@@ -52,109 +72,132 @@
 <body class="bg-gray-100 flex">
 
   <?php
-    $current_page = 'anggota';
-    $active_class = 'bg-slate-800 text-white border-l-4 border-blue-500';
-    $inactive_class = 'text-slate-400 hover:bg-slate-800 hover:text-white transition-colors duration-200 border-l-4 border-transparent';
+    $current_page = 'anggota'; // Set halaman aktif
+    echo view('pages/admin/template/sidebar', ['current_page' => $current_page]);
+    // Pisahkan data admin dan member
+    $admins = array_filter($anggota, fn($user) => $user['role_id'] == 1);
+    $members = array_filter($anggota, fn($user) => $user['role_id'] == 2);
+
+    // Ambil daftar kelas unik untuk filter
+    $unique_kelas = !empty($members) ? array_unique(array_column($members, 'kelas')) : [];
+    sort($unique_kelas);
   ?>
-
-  <!-- Sidebar -->
-  <aside id="sidebar" class="fixed top-0 left-0 flex h-screen w-64 flex-col bg-slate-900 text-gray-200 transition-all duration-300">
-    <!-- Logo -->
-    <div class="flex items-center gap-3 p-4">
-      <a href="<?= base_url('dashboard') ?>" class="flex items-center gap-3">
-        <i class="fas fa-book-reader text-4xl text-blue-400"></i>
-        <div class="sidebar-logo-text">
-          <span class="text-white font-bold text-xl block">Pustaka</span>
-          <span class="text-slate-400 text-sm">App Perpustakaan</span>
-        </div>
-      </a>
-    </div>
-
-    <!-- Menu -->
-    <nav class="flex-1 space-y-2 p-4">
-      <h3 class="sidebar-menu-title px-3 text-xs font-semibold uppercase text-slate-500"><span class="sidebar-text">Menu Utama</span></h3>
-      <div class="flex flex-col space-y-1">
-        <a href="<?= base_url('dashboard') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $current_page === 'dashboard' ? $active_class : $inactive_class ?>">
-          <i class="fas fa-tachometer-alt w-5 text-center"></i> <span class="sidebar-text">Dashboard</span>
-        </a>
-        <a href="<?= base_url('anggota') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $current_page === 'anggota' ? $active_class : $inactive_class ?>">
-          <i class="fas fa-users w-5 text-center"></i> <span class="sidebar-text">Anggota</span>
-        </a>
-        <a href="<?= base_url('buku') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $current_page === 'buku' ? $active_class : $inactive_class ?>">
-          <i class="fas fa-book w-5 text-center"></i> <span class="sidebar-text">Buku</span>
-        </a>
-        <a href="<?= base_url('kategori') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $current_page === 'kategori' ? $active_class : $inactive_class ?>">
-          <i class="fas fa-tags w-5 text-center"></i> <span class="sidebar-text">Kategori</span>
-        </a>
-      </div>
-    </nav>
-
-    <!-- Logout -->
-    <div class="p-4">
-      <a href="<?= base_url('logout') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= $inactive_class ?>">
-        <i class="fas fa-sign-out-alt w-5 text-center"></i> <span class="sidebar-text">Logout</span>
-      </a>
-    </div>
-  </aside>
 
   <!-- Main content -->
   <div id="main-content" class="flex-1 flex flex-col ml-64 transition-all duration-300">
 
     <!-- Header bar -->
-    <header class="bg-white shadow-sm p-4 flex justify-between items-center">
+    <header class="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-30">
       <div class="flex items-center">
         <button id="sidebar-toggle" class="text-gray-500 hover:text-gray-700 focus:outline-none mr-4"><i class="fas fa-bars text-lg"></i></button>
         <h1 class="text-xl font-semibold">Daftar Anggota</h1>
       </div>
-      <div class="flex items-center space-x-3">
-        <?php 
-          $userImage = session()->get('image') ?? 'default.jpg';
-          $userName = session()->get('nama') ?? 'User';
-          $userRole = session()->get('role') ?? 'Peran';
-        ?>
-        <div class="text-right">
-          <span class="font-medium block text-sm"><?= esc($userName) ?></span>
-          <span class="text-xs text-gray-500 block"><?= esc($userRole) ?></span>
-        </div>
-        <img src="<?= base_url('uploads/' . $userImage) ?>" alt="User" class="w-8 h-8 rounded-full">
-      </div>
+      <?= view('pages/admin/template/header_user_profile'); ?>
     </header>
 
     <!-- Content -->
     <main class="p-6">
-      <div class="card-item bg-white p-4 rounded-lg shadow-sm mb-6">
+      <div class="w-full max-w-7xl mx-auto">
+        <div class="card-item bg-white p-4 rounded-lg shadow-sm mb-6">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 class="text-2xl font-bold text-blue-600">Data Anggota Perpustakaan</h2>
+            <h2 class="text-2xl font-bold text-green-600">Data Anggota Perpustakaan</h2>
             <p class="text-sm text-gray-500 mt-1">Kelola dan lihat semua anggota yang terdaftar.</p>
           </div>
-          <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-            <div class="relative w-full sm:w-64">
+          <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+            <div class="relative w-full sm:w-52">
               <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                 <i class="fas fa-search text-gray-400"></i>
               </span>
-              <input type="text" id="searchInput" placeholder="Cari nama atau email..." 
-                     class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+              <input type="text" id="searchInput" placeholder="Cari nama/NISN..." 
+                     class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
             </div>
-            <button onclick="openModal('add')" class="flex-shrink-0 w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center justify-center">
+            <div class="relative w-full sm:w-48">
+              <select id="classFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                <option value="all">Semua Kelas</option>
+                <?php foreach($unique_kelas as $kelas): ?>
+                  <option value="<?= esc($kelas) ?>"><?= esc($kelas) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <button onclick="openModal('add')" class="flex-shrink-0 w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center justify-center">
               <i class="fas fa-plus mr-2"></i> Tambah Anggota
             </button>
           </div>
         </div>
       </div>
 
-      <div class="overflow-x-auto bg-white rounded-lg shadow-sm">
+        <!-- Tabel Administrator -->
+        <div class="mb-8">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Tabel Administrator</h3>
+        <div class="overflow-x-auto bg-white rounded-lg shadow-sm">
+          <table class="min-w-full text-sm text-left">
+            <thead class="bg-slate-50 border-b border-gray-200 text-slate-600 uppercase text-xs">
+              <tr>
+                <th class="py-3 px-6 font-semibold">Admin</th>
+                <th class="py-3 px-6 font-semibold">Peran</th>
+                <th class="py-3 px-6 font-semibold">Tanggal Bergabung</th>
+                <th class="py-3 px-6 font-semibold text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody class="text-gray-600" id="adminTableBody">
+              <?php if (empty($admins)): ?>
+                <tr><td colspan="4" class="text-center py-4 text-gray-500">Tidak ada data admin.</td></tr>
+              <?php else: foreach($admins as $u): ?>
+              <tr class="card-item border-b border-gray-200 hover:bg-gray-50 align-middle">
+                <td class="py-3 px-6">
+                  <div class="flex items-center space-x-4">
+                    <img src="<?= base_url('uploads/' . esc($u['image'])) ?>" alt="Foto <?= esc($u['nama']) ?>" class="w-10 h-10 rounded-full object-cover">
+                    <div>
+                      <div class="font-medium text-gray-800"><?= esc($u['nama']) ?></div>
+                      <div class="text-xs text-gray-500"><?= esc($u['email']) ?></div>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-3 px-6">
+                  <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                    <?= esc(ucfirst($u['role'])) ?>
+                  </span>
+                </td>
+                <td class="py-3 px-6"><?= date('d M Y', strtotime($u['tanggal_input'])) ?></td>
+                <td class="py-3 px-6 text-center">
+                  <div class="flex item-center justify-center gap-2">
+                    <button onclick="openModal('edit', <?= htmlspecialchars(json_encode($u), ENT_QUOTES, 'UTF-8') ?>)" class="w-8 h-8 flex items-center justify-center rounded-full text-green-500 hover:bg-green-100 transition-colors" title="Edit">
+                      <i class="fas fa-edit text-sm"></i>
+                    </button>
+                    <a href="<?= base_url('anggota/delete/' . $u['id']) ?>" class="w-8 h-8 flex items-center justify-center rounded-full text-red-500 hover:bg-red-100 transition-colors" onclick="return confirm('Apakah Anda yakin ingin menghapus anggota ini?')" title="Hapus">
+                      <i class="fas fa-trash text-sm"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              <?php endforeach; endif; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+        <!-- Tabel Member -->
+        <div>
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Tabel Member</h3>
+        <div class="overflow-x-auto bg-white rounded-lg shadow-sm">
         <table class="min-w-full text-sm text-left">
           <thead class="bg-slate-50 border-b border-gray-200 text-slate-600 uppercase text-xs">
             <tr>
               <th class="py-3 px-6 font-semibold">Anggota</th>
-              <th class="py-3 px-6 font-semibold">Peran</th>
+              <th class="py-3 px-6 font-semibold">NISN</th>
+              <th class="py-3 px-6 font-semibold">NIK</th>
+              <th class="py-3 px-6 font-semibold">Kelas</th>
+              <th class="py-3 px-6 font-semibold">Jenis Kelamin</th>
+              <th class="py-3 px-6 font-semibold">No. HP</th>
               <th class="py-3 px-6 font-semibold">Tanggal Bergabung</th>
-              <th class="py-3 px-6 font-semibold text-center">Aksi</th>
+              <th class="py-3 px-6 font-semibold text-center">Aksi</th> 
             </tr>
           </thead>
           <tbody class="text-gray-600" id="anggotaTableBody">
-            <?php foreach($anggota as $u): ?>
+            <?php if (empty($members)): ?>
+              <tr><td colspan="8" class="text-center py-4 text-gray-500">Tidak ada data member.</td></tr>
+            <?php else: foreach($members as $u): ?>
             <tr class="card-item border-b border-gray-200 hover:bg-gray-50 align-middle">
               <td class="py-3 px-6">
                 <div class="flex items-center space-x-4">
@@ -165,25 +208,15 @@
                   </div>
                 </div>
               </td>
-              <td class="py-3 px-6">
-                <?php
-                  $roleClass = 'bg-gray-100 text-gray-800'; // Default
-                  if ($u['role_id'] == 1) { // Administrator
-                    $roleClass = 'bg-blue-100 text-blue-800';
-                  } elseif ($u['role_id'] == 2) { // Petugas
-                    $roleClass = 'bg-yellow-100 text-yellow-800';
-                  } elseif ($u['role_id'] == 3) { // Member
-                    $roleClass = 'bg-green-100 text-green-800';
-                  }
-                ?>
-                <span class="px-2 py-1 text-xs font-semibold rounded-full <?= $roleClass ?>">
-                  <?= esc($u['role']) ?>
-                </span>
-              </td>
+              <td class="py-3 px-6 font-medium text-gray-700"><?= esc($u['nisn']) ?></td>
+              <td class="py-3 px-6 font-medium text-gray-700"><?= esc($u['nik'] ?? '-') ?></td>
+              <td class="py-3 px-6"><?= esc($u['kelas']) ?></td>
+              <td class="py-3 px-6"><?= esc($u['jenis_kelamin'] ?? '-') ?></td>
+              <td class="py-3 px-6"><?= esc($u['no_hp'] ?? '-') ?></td>
               <td class="py-3 px-6"><?= date('d M Y', strtotime($u['tanggal_input'])) ?></td>
               <td class="py-3 px-6 text-center">
                 <div class="flex item-center justify-center gap-2">
-                  <button onclick="openModal('edit', <?= htmlspecialchars(json_encode($u), ENT_QUOTES, 'UTF-8') ?>)" class="w-8 h-8 flex items-center justify-center rounded-full text-blue-500 hover:bg-blue-100 transition-colors" title="Edit">
+                  <button onclick="openModal('edit', <?= htmlspecialchars(json_encode($u), ENT_QUOTES, 'UTF-8') ?>)" class="w-8 h-8 flex items-center justify-center rounded-full text-green-500 hover:bg-green-100 transition-colors" title="Edit">
                     <i class="fas fa-edit text-sm"></i>
                   </button>
                   <a href="<?= base_url('anggota/delete/' . $u['id']) ?>" class="w-8 h-8 flex items-center justify-center rounded-full text-red-500 hover:bg-red-100 transition-colors" onclick="return confirm('Apakah Anda yakin ingin menghapus anggota ini?')" title="Hapus">
@@ -192,9 +225,11 @@
                 </div>
               </td>
             </tr>
-            <?php endforeach; ?>
+            <?php endforeach; endif; ?>
           </tbody>
         </table>
+      </div>
+      </div>
       </div>
     </main>
   </div>
@@ -223,33 +258,70 @@
       <form id="anggotaForm" action="" method="post">
         <?= csrf_field() ?>
         <input type="hidden" name="cropped_image" id="cropped_image">
-        <div class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
           <div>
             <label for="nama" class="block text-sm font-medium text-gray-700">Nama</label>
-            <input type="text" name="nama" id="nama" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+            <input type="text" name="nama" id="nama" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" required>
           </div>
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-            <input type="email" name="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+            <input type="email" name="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" required>
+          </div>
+          <div class="school-field">
+            <label for="nis" class="block text-sm font-medium text-gray-700">NIS</label>
+            <input type="text" name="nis" id="nis" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" placeholder="Contoh: 12345">
+          </div>
+          <div class="school-field">
+            <label for="nisn" class="block text-sm font-medium text-gray-700">NISN</label>
+            <input type="text" name="nisn" id="nisn" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" placeholder="Contoh: 20251234">
+          </div>
+          <div class="school-field">
+            <label for="kelas" class="block text-sm font-medium text-gray-700">Kelas</label>
+            <input type="text" name="kelas" id="kelas" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" placeholder="Contoh: XI RPL 1">
+          </div>
+          <div class="school-field">
+            <label for="jurusan" class="block text-sm font-medium text-gray-700">Jurusan</label>
+            <input type="text" name="jurusan" id="jurusan" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" placeholder="Contoh: Rekayasa Perangkat Lunak">
+          </div>
+          <div class="school-field">
+            <label for="no_hp" class="block text-sm font-medium text-gray-700">No. HP</label>
+            <input type="tel" name="no_hp" id="no_hp" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" placeholder="Contoh: 08123456789">
+          </div>
+          <div class="school-field">
+            <label for="tanggal_lahir" class="block text-sm font-medium text-gray-700">Tanggal Lahir</label>
+            <input type="date" name="tanggal_lahir" id="tanggal_lahir" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+          </div>
+          <div class="school-field">
+            <label for="jenis_kelamin" class="block text-sm font-medium text-gray-700">Jenis Kelamin</label>
+            <select name="jenis_kelamin" id="jenis_kelamin" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+              <option value="">Pilih Jenis Kelamin</option>
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
+            </select>
+          </div>
+          <div class="school-field">
+            <label for="nik" class="block text-sm font-medium text-gray-700">NIK</label>
+            <input type="text" name="nik" id="nik" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" placeholder="16 digit NIK">
           </div>
           <div id="password-field">
             <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-            <input type="password" name="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            <input type="password" name="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+            <p class="text-xs text-gray-500 mt-1">Kosongkan jika tidak ingin mengubah password.</p>
           </div>
           <div>
             <label for="role_id" class="block text-sm font-medium text-gray-700">Peran</label>
-            <select name="role_id" id="role_id" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+            <select name="role_id" id="role_id" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" required>
               <option value="">Pilih Peran</option>
               <?php foreach($roles as $role): ?>
-                <option value="<?= $role['id'] ?>"><?= esc($role['role']) ?></option>
+                <option value="<?= $role['id'] ?>"><?= esc(ucfirst($role['role'])) ?></option>
               <?php endforeach; ?>
             </select>
           </div>
-          <div>
+          <div class="md:col-span-2">
             <label class="block text-sm font-medium text-gray-700">Gambar Profil</label>
             <div class="mt-1 flex items-center space-x-4">
-              <img id="image_preview" src="<?= base_url('uploads/default.jpg') ?>" alt="Preview" class="w-20 h-20 rounded-full object-cover">
-              <label for="image_input" class="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              <img id="image_preview" src="<?= base_url('uploads/default.png') ?>" alt="Preview" class="w-20 h-20 rounded-full object-cover">
+              <label for="image_input" class="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                 <span>Ubah Gambar</span>
                 <input id="image_input" name="image" type="file" class="sr-only" accept="image/*">
               </label>
@@ -258,7 +330,7 @@
         </div>
         <div class="flex justify-end mt-6 space-x-2">
           <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">Batal</button>
-          <button type="submit" id="modalSubmitButton" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow-sm">Simpan</button>
+          <button type="submit" id="modalSubmitButton" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 shadow-sm">Simpan</button>
         </div>
       </form>
     </div>
@@ -273,7 +345,7 @@
       </div>
       <div class="flex justify-end space-x-2 mt-4">
         <button type="button" id="cancelCrop" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Batal</button>
-        <button type="button" id="cropButton" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Potong & Simpan</button>
+        <button type="button" id="cropButton" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Potong & Simpan</button>
       </div>
     </div>
   </div>
@@ -282,26 +354,22 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     // Tampilkan notifikasi toast dengan SweetAlert2
-    const Toast = Swal.mixin({
+    const AnimatedToast = Swal.mixin({
       toast: true,
       position: 'top-end',
       showConfirmButton: false,
       timer: 3000,
       timerProgressBar: true,
-      didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-      }
     });
 
     <?php if (session()->getFlashdata('success')): ?>
-      Toast.fire({
+      AnimatedToast.fire({
         icon: 'success',
         title: '<?= session()->getFlashdata('success') ?>'
       })
     <?php endif; ?>
     <?php if (session()->getFlashdata('error')): ?>
-      Toast.fire({
+      AnimatedToast.fire({
         icon: 'error',
         title: '<?= session()->getFlashdata('error') ?>'
       })
@@ -317,10 +385,27 @@
     const imagePreview = document.getElementById('image_preview');
     const croppedImageInput = document.getElementById('cropped_image');
 
+    const schoolFields = document.querySelectorAll('.school-field');
+    const roleSelect = document.getElementById('role_id');
+
+    // Fungsi untuk mengatur visibilitas field sekolah berdasarkan peran
+    function toggleSchoolFields() {
+      const selectedRole = roleSelect.value;
+      // Asumsi role_id 1 = Admin, 2 = Member
+      if (selectedRole == 1) {
+        schoolFields.forEach(field => field.style.display = 'none');
+      } else {
+        schoolFields.forEach(field => field.style.display = 'block');
+      }
+    }
+
+    // Tambahkan event listener ke dropdown peran
+    roleSelect.addEventListener('change', toggleSchoolFields);
+
     function openModal(mode, data = null) {
       anggotaForm.reset();
       croppedImageInput.value = '';
-      imagePreview.src = '<?= base_url('uploads/default.jpg') ?>';
+      imagePreview.src = '<?= base_url('uploads/default.png') ?>';
 
       if (mode === 'add') {
         modalTitle.textContent = 'Tambah Anggota Baru';
@@ -328,16 +413,31 @@
         anggotaForm.action = '<?= base_url('anggota/create') ?>';
         passwordField.style.display = 'block';
         document.getElementById('password').setAttribute('required', 'required');
+        // Saat menambah, panggil fungsi untuk menyesuaikan tampilan awal
+        toggleSchoolFields();
       } else if (mode === 'edit' && data) {
         modalTitle.textContent = 'Edit Anggota';
         modalSubmitButton.textContent = 'Simpan Perubahan';
         anggotaForm.action = `<?= base_url('anggota/update/') ?>/${data.id}`;
         document.getElementById('nama').value = data.nama;
         document.getElementById('email').value = data.email;
+        document.getElementById('nis').value = data.nis;
+        document.getElementById('nisn').value = data.nisn;
+        document.getElementById('kelas').value = data.kelas;
+        document.getElementById('jurusan').value = data.jurusan;
+        document.getElementById('no_hp').value = data.no_hp;
+        document.getElementById('tanggal_lahir').value = data.tanggal_lahir;
+        document.getElementById('jenis_kelamin').value = data.jenis_kelamin;
+        document.getElementById('nik').value = data.nik;
         document.getElementById('role_id').value = data.role_id;
         imagePreview.src = `<?= base_url('uploads/') ?>/${data.image}`;
         passwordField.style.display = 'none';
         document.getElementById('password').removeAttribute('required');
+        document.getElementById('password').placeholder = "Kosongkan jika tidak diubah";
+
+        // Sembunyikan field sekolah jika role adalah admin (role_id = 1)
+        // Panggil fungsi untuk menyesuaikan tampilan berdasarkan data yang ada
+        toggleSchoolFields();
       }
 
       modal.classList.remove('hidden');
@@ -363,6 +463,14 @@
           openModal('add');
           document.getElementById('nama').value = '<?= old('nama') ?>';
           document.getElementById('email').value = '<?= old('email') ?>';
+          document.getElementById('nis').value = '<?= old('nis') ?>';
+          document.getElementById('nisn').value = '<?= old('nisn') ?>';
+          document.getElementById('kelas').value = '<?= old('kelas') ?>';
+          document.getElementById('jurusan').value = '<?= old('jurusan') ?>';
+          document.getElementById('no_hp').value = '<?= old('no_hp') ?>';
+          document.getElementById('tanggal_lahir').value = '<?= old('tanggal_lahir') ?>';
+          document.getElementById('jenis_kelamin').value = '<?= old('jenis_kelamin') ?>';
+          document.getElementById('nik').value = '<?= old('nik') ?>';
           document.getElementById('role_id').value = '<?= old('role_id') ?>';
         } else if (mode === 'edit') {
           const editId = '<?= session()->getFlashdata('edit_id') ?>';
@@ -370,6 +478,14 @@
             id: editId,
             nama: '<?= old('nama') ?>',
             email: '<?= old('email') ?>',
+            nis: '<?= old('nis') ?>',
+            nisn: '<?= old('nisn') ?>',
+            kelas: '<?= old('kelas') ?>',
+            jurusan: '<?= old('jurusan') ?>',
+            no_hp: '<?= old('no_hp') ?>',
+            tanggal_lahir: '<?= old('tanggal_lahir') ?>',
+            jenis_kelamin: '<?= old('jenis_kelamin') ?>',
+            nik: '<?= old('nik') ?>',
             role_id: '<?= old('role_id') ?>',
             image: 'default.jpg' // Placeholder, gambar tidak di-repopulate
           };
@@ -441,36 +557,57 @@
     });
 
     // Sidebar Toggle
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('main-content');
     const sidebarToggle = document.getElementById('sidebar-toggle');
 
     sidebarToggle.addEventListener('click', () => {
       document.documentElement.classList.toggle('sidebar-is-collapsed');
 
       // Simpan status sidebar di localStorage
-      const isCollapsed = document.documentElement.classList.contains('sidebar-is-collapsed');
-      localStorage.setItem('sidebarCollapsed', isCollapsed);
+      localStorage.setItem('sidebarCollapsed', document.documentElement.classList.contains('sidebar-is-collapsed'));
     });
 
     // Fungsi Pencarian
     const searchInput = document.getElementById('searchInput');
-    const tableBody = document.getElementById('anggotaTableBody');
-    const tableRows = tableBody.getElementsByTagName('tr');
+    const classFilter = document.getElementById('classFilter');
+    const adminTableBody = document.getElementById('adminTableBody');
+    const memberTableBody = document.getElementById('anggotaTableBody');
 
-    searchInput.addEventListener('keyup', function() {
-      const searchTerm = searchInput.value.toLowerCase();
+    function applyFilters() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedClass = classFilter.value;
 
-      for (let i = 0; i < tableRows.length; i++) {
-        const row = tableRows[i];
-        const cells = row.getElementsByTagName('td');
-        const memberCell = cells[0]; // Kolom 'Anggota'
-        if (memberCell) {
-          const textContent = memberCell.textContent || memberCell.innerText;
-          row.style.display = textContent.toLowerCase().includes(searchTerm) ? '' : 'none';
+        // Filter Tabel Admin (hanya berdasarkan nama/email)
+        const adminRows = adminTableBody.getElementsByTagName('tr');
+        for (let row of adminRows) {
+            const memberCell = row.cells[0];
+            if (memberCell) {
+                const textContent = (memberCell.textContent || memberCell.innerText).toLowerCase();
+                row.style.display = textContent.includes(searchTerm) ? '' : 'none';
+            }
         }
-      }
-    });
+
+        // Filter Tabel Member (berdasarkan nama/email/NISN dan kelas)
+        const memberRows = memberTableBody.getElementsByTagName('tr');
+        for (let row of memberRows) {
+            const memberCell = row.cells[0];
+            const nisnCell = row.cells[1];
+            const classCell = row.cells[2];
+
+            if (memberCell && nisnCell && classCell) {
+                const textContent = (memberCell.textContent || memberCell.innerText).toLowerCase();
+                const nisnContent = (nisnCell.textContent || nisnCell.innerText).toLowerCase();
+                const classContent = classCell.textContent || classCell.innerText;
+
+                const searchMatch = textContent.includes(searchTerm) || nisnContent.includes(searchTerm);
+                const classMatch = (selectedClass === 'all' || classContent === selectedClass);
+
+                row.style.display = (searchMatch && classMatch) ? '' : 'none';
+            }
+        }
+    }
+
+    searchInput.addEventListener('keyup', applyFilters);
+    classFilter.addEventListener('change', applyFilters);
   </script>
 </body>
 </html>

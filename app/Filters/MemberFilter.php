@@ -17,8 +17,8 @@ class MemberFilter implements FilterInterface
         }
 
         // Jika peran bukan Member (3), lempar ke halaman admin
-        if ($session->get('role_id') != 3) {
-            return redirect()->to('/dashboard')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
+        if ($session->get('role_id') != 2) { // Hanya izinkan Member (role_id = 2)
+            return redirect()->to('/dashboard')->with('error', 'Halaman ini hanya untuk member.');
         }
     }
 

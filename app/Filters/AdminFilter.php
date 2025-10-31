@@ -18,8 +18,8 @@ class AdminFilter implements FilterInterface
 
         // Jika peran bukan Administrator (1) atau Petugas (2), lempar ke halaman member
         $role_id = $session->get('role_id');
-        if (!in_array($role_id, [1, 2])) {
-            return redirect()->to('/member-dashboard')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
+        if ($role_id != 1) { // Hanya izinkan Administrator
+            return redirect()->to('/member')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
         }
     }
 
