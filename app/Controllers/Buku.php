@@ -295,27 +295,5 @@ class Buku extends BaseController
             ->setHeader('Content-Type', $result->getMimeType())
             ->setBody($result->getString());
     }
-
-    /**
-     * Mengambil buku terkait berdasarkan kategori.
-     *
-     * @param int|null $categoryId ID kategori
-     * @param int      $excludeBookId ID buku yang tidak akan ditampilkan
-     * @param int      $limit Jumlah buku yang akan diambil
-     * @return array
-     */
-    public function getRelatedBooks($categoryId, $excludeBookId, $limit = 5)
-    {
-        if (!$categoryId) {
-            return [];
-        }
-
-        return $this->select('buku.*')
-            ->join('buku_kategori', 'buku_kategori.buku_id = buku.id')
-            ->where('buku_kategori.kategori_id', $categoryId)
-            ->where('buku.id !=', $excludeBookId)
-            ->limit($limit)
-            ->findAll();
-    }
 }
 ?>

@@ -60,7 +60,7 @@
                     <div class="flex-grow">
                         <?php 
                             // Memeriksa apakah nama_kategori ada dan tidak kosong
-                            $kategoriDisplay = !empty($buku['nama_kategori']) ? $buku['nama_kategori'] : 'Tanpa Kategori';
+                            $kategoriDisplay = !empty($buku['kategori_nama']) ? $buku['kategori_nama'] : 'Tanpa Kategori';
                             $kategoriList = explode(', ', $kategoriDisplay);
                         ?>
                         <?php foreach ($kategoriList as $kat): ?>
@@ -120,22 +120,22 @@
         <?php if (!empty($buku_terkait)): ?>
         <div class="mt-12">
             <h2 class="text-2xl font-bold text-slate-800 mb-6 border-l-4 border-indigo-500 pl-3">Anda Mungkin Juga Suka</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-4">
                 <?php foreach ($buku_terkait as $item): ?>
-                    <div class="group bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-300 transition-all duration-300 hover:-translate-y-1">
+                    <div class="group bg-white rounded-lg overflow-hidden border border-slate-200 shadow-sm hover:shadow-lg hover:border-indigo-300 transition-all duration-300 hover:-translate-y-1">
                         <a href="<?= base_url('member/buku/' . esc($item['id'], 'url')) ?>" title="<?= esc($item['judul_buku']) ?>">
                             <div class="relative">
-                                <div class="bg-slate-100 flex items-center justify-center p-1" style="aspect-ratio: 2/3;">
+                                <div class="bg-slate-100 flex items-center justify-center" style="aspect-ratio: 2/3;">
                                     <img src="<?= base_url('uploads/' . esc($item['image'], 'attr')) ?>" alt="Cover <?= esc($item['judul_buku'], 'attr') ?>" class="w-auto h-full object-contain group-hover:scale-105 transition-transform duration-300">
                                 </div>
                                 <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-indigo-500 text-white">
+                                    <div class="w-8 h-8 flex items-center justify-center rounded-full bg-indigo-500 text-white">
                                         <i class="fas fa-eye"></i>
                                     </div>
                                 </div>
                             </div>
-                            <div class="p-3">
-                                <h3 class="font-bold text-sm text-slate-800 truncate group-hover:text-indigo-600 transition-colors"><?= esc($item['judul_buku']) ?></h3>
+                            <div class="p-2">
+                                <h3 class="font-semibold text-xs text-slate-800 truncate group-hover:text-indigo-600 transition-colors"><?= esc($item['judul_buku']) ?></h3>
                                 <p class="text-xs text-slate-500 mt-1 truncate"><?= esc($item['pengarang']) ?></p>
                             </div>
                         </a>
@@ -146,7 +146,7 @@
         <?php endif; ?>
 
     </div>
-
+    
     <footer class="text-center py-4 mt-8 bg-white border-t">
         <p class="text-slate-500">&copy; <?= date('Y') ?> Pustaka Booking. All rights reserved.</p>
     </footer>

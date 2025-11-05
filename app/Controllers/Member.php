@@ -44,6 +44,7 @@ class Member extends BaseController
             'cart_count' => $bookingModel->getBookingCount($userId),
             'online_berita' => $this->getOnlineNews(),
             'current_page' => 'home', // Menandakan halaman aktif
+            'web_profile' => get_web_profile(), // Menambahkan data profil web
         ];
 
         return view('pages/member/homepage', $data);
@@ -83,21 +84,31 @@ class Member extends BaseController
     public function detailBuku($id)
     {
         $bukuModel = new BukuModel();
-        
-        $buku = $bukuModel->select('buku.*, GROUP_CONCAT(kategori.nama_kategori SEPARATOR ", ") as kategori_nama')
-                         ->join('buku_kategori', 'buku_kategori.buku_id = buku.id', 'left')
-                         ->join('kategori', 'kategori.id_kategori = buku_kategori.kategori_id', 'left')
-                         ->where('buku.id', $id)
-                         ->groupBy('buku.id')
-                         ->find($id);
+        $bookingModel = new BookingModel();
+
+        // 1. Ambil data buku utama menggunakan method baru dari model
+        $buku = $bukuModel->findBookWithCategories($id);
+
         if (!$buku) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound("Buku dengan ID $id tidak ditemukan.");
         }
-    
+
+        // 2. Ambil ID kategori pertama untuk mencari buku terkait
+        $kategoriIdUtama = !empty($buku['kategori_ids']) ? explode(',', $buku['kategori_ids'])[0] : null;
+
+        // 3. Panggil method getRelatedBooks dari model
+        $bukuTerkait = $bukuModel->getRelatedBooks(
+            $kategoriIdUtama, // ID Kategori
+            $buku['id'],      // ID Buku utama untuk dikecualikan
+            5                 // Jumlah buku terkait yang ingin ditampilkan
+        );
+
         $data = [
-            'title' => $buku['judul_buku'],
-            'buku'  => $buku,
-            'cart_count' => (new BookingModel())->getBookingCount(session()->get('user_id')),
+            'title'        => $buku['judul_buku'],
+            'buku_terkait' => $bukuTerkait, // Kirim data buku terkait ke view
+            'cart_count'   => $bookingModel->getBookingCount(session()->get('user_id')),
+            'web_profile'  => get_web_profile(), // Memastikan data profil web diteruskan
+            'buku'         => $buku, // Memperbaiki variabel buku yang hilang
         ];
     
         return view('pages/member/detail_buku', $data);
@@ -124,6 +135,7 @@ class Member extends BaseController
             'berita' => $berita,
             'cart_count' => $bookingModel->getBookingCount(session()->get('user_id')),
             'online_berita_sidebar' => $this->getOnlineNews(), // Menambahkan berita online untuk sidebar
+            'web_profile' => get_web_profile(), // Menambahkan data profil web
         ];
 
         return view('pages/member/detail_berita', $data);
@@ -233,7 +245,8 @@ class Member extends BaseController
             'user' => $userModel->find($userId),
             'validation' => \Config\Services::validation(), // Sediakan instance validation default
             'cart_count' => $bookingModel->getBookingCount($userId),
-            'riwayat_peminjaman' => $riwayat_peminjaman
+            'riwayat_peminjaman' => $riwayat_peminjaman,
+            'web_profile' => get_web_profile(), // Menambahkan data profil web
         ];
     }
 
