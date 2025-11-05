@@ -9,6 +9,7 @@ use App\Models\DetailBookingModel;
 use App\Models\BeritaModel;
 use App\Models\UserModel;
 use App\Models\KategoriModel;
+use App\Models\WebProfileModel;
 
 class Member extends BaseController
 {
@@ -42,6 +43,7 @@ class Member extends BaseController
                 ->limit(6)->findAll(),
             'cart_count' => $bookingModel->getBookingCount($userId),
             'online_berita' => $this->getOnlineNews(),
+            'current_page' => 'home', // Menandakan halaman aktif
         ];
 
         return view('pages/member/homepage', $data);
@@ -133,6 +135,7 @@ class Member extends BaseController
         $bookingModel = new BookingModel();
         $detailBookingModel = new DetailBookingModel();
         $userId = session()->get('user_id');
+        $webProfileModel = new WebProfileModel();
 
         // 1. Validasi dasar
         if (!$userId) {
@@ -147,12 +150,13 @@ class Member extends BaseController
         // 2. Cek apakah user sudah punya booking pending
         $existingBooking = $bookingModel->where('id_user', $userId)->where('status', 'pending')->first();
 
-        // 3. Cek limit booking (misal: maksimal 3 buku per booking)
-        $limitBooking = 3;
+        // 3. Cek limit booking dari profil web
+        $profile = $webProfileModel->find(1) ?? ['max_buku_pinjam' => 3];
+        $limitBooking = $profile['max_buku_pinjam'];
         if ($existingBooking) {
             $count = $detailBookingModel->where('id_booking', $existingBooking['id_booking'])->countAllResults();
             if ($count >= $limitBooking) {
-                return redirect()->back()->with('error', "Anda sudah mencapai batas maksimal booking ({$limitBooking} buku).");
+                return redirect()->to('/member/keranjang')->with('error', "Anda sudah mencapai batas maksimal booking ({$limitBooking} buku). Selesaikan booking Anda saat ini terlebih dahulu.");
             }
             // Cek apakah buku yang sama sudah dibooking
             $isAlreadyBooked = $detailBookingModel->where('id_booking', $existingBooking['id_booking'])->where('id_buku', $bookId)->first();
@@ -187,7 +191,7 @@ class Member extends BaseController
 
             $db->transComplete();
 
-            return redirect()->back()->with('success', 'Buku berhasil ditambahkan ke keranjang booking Anda.');
+            return redirect()->to('/member/keranjang')->with('success', 'Buku berhasil ditambahkan ke keranjang booking Anda.');
 
         } catch (\Exception $e) {
             $db->transRollback();
@@ -243,9 +247,6 @@ class Member extends BaseController
         $booking = $bookingModel->where('id_user', $userId)->where('status', 'pending')->first();
         
         $data['user'] = (new UserModel())->find($userId);
-        
-        // Placeholder untuk riwayat peminjaman
-        $data['riwayat_peminjaman'] = [];
 
         if ($booking) {
             $keranjang = $detailBookingModel
@@ -256,9 +257,11 @@ class Member extends BaseController
         }
 
         $data = [
-            'title' => 'Keranjang Booking',
-            'keranjang' => $keranjang,
-            'cart_count' => count($keranjang),
+            'title'       => 'Keranjang Booking',
+            'keranjang'   => $keranjang,
+            'cart_count'  => count($keranjang),
+            'web_profile' => get_web_profile(),
+            'current_page' => 'keranjang', // Menandakan halaman aktif
         ];
 
         return view('pages/member/keranjang', $data);
@@ -294,6 +297,35 @@ class Member extends BaseController
         $db->transComplete();
     
         return redirect()->to('/member/keranjang')->with('success', 'Buku berhasil dihapus dari keranjang.');
+    }
+
+    public function selesaikanBooking()
+    {
+        $bookingModel = new BookingModel();
+        $userId = session()->get('user_id');
+
+        // 1. Pastikan method diakses via POST
+        if ($this->request->getMethod() !== 'post') {
+            return redirect()->to('/member/keranjang')->with('error', 'Aksi tidak valid.');
+        }
+
+        // 2. Cari booking yang masih pending
+        $booking = $bookingModel->where('id_user', $userId)->where('status', 'pending')->first();
+
+        if (!$booking) {
+            return redirect()->to('/member/keranjang')->with('error', 'Tidak ada booking aktif yang bisa diselesaikan.');
+        }
+
+        // 3. Update status booking menjadi 'dibooking'
+        // Anda juga bisa menambahkan batas waktu pengambilan di sini
+        $dataToUpdate = [
+            'status' => 'dibooking',
+            // Contoh: 'batas_ambil' => date('Y-m-d H:i:s', strtotime('+1 day'))
+        ];
+
+        $bookingModel->update($booking['id_booking'], $dataToUpdate);
+
+        return redirect()->to('/member/profile')->with('success', 'Booking Anda telah dikonfirmasi. Silakan ambil buku di perpustakaan sesuai jadwal.');
     }
 
     public function katalog()
@@ -336,6 +368,8 @@ class Member extends BaseController
             'cart_count' => $bookingModel->getBookingCount($userId),
             'keyword' => $keyword,
             'selected_kategori' => $kategoriId,
+            'web_profile' => get_web_profile(), // Menambahkan data profil web
+            'current_page' => 'katalog', // Menandakan halaman aktif
         ];
 
         return view('pages/member/katalog', $data);

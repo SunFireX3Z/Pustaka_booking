@@ -7,6 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- ApexCharts -->
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     .sidebar-is-collapsed #sidebar { width: 4rem; }
@@ -65,21 +67,6 @@
           </div>
         </div>
       </div>
-
-        <!-- Flash Messages -->
-      <?php if (session()->getFlashdata('success')): ?>
-        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded-lg shadow-md" role="alert">
-          <p class="font-bold">Sukses</p>
-          <p><?= session()->getFlashdata('success') ?></p>
-        </div>
-      <?php endif; ?>
-      <?php if (session()->getFlashdata('error')): ?>
-        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-lg shadow-md" role="alert">
-          <p class="font-bold">Gagal</p>
-          <p><?= session()->getFlashdata('error') ?></p>
-        </div>
-      <?php endif; ?>
-
 
         <!-- Placeholder untuk tabel data -->
         <div class="card-item overflow-x-auto bg-white rounded-lg shadow-sm">
@@ -239,6 +226,32 @@
         }, index * 100); // Delay 100ms untuk setiap kartu
       });
     });
+
+    // Notifikasi Toast dengan SweetAlert2
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+      }
+    });
+
+    <?php if (session()->getFlashdata('success')): ?>
+      Toast.fire({
+        icon: 'success',
+        title: '<?= session()->getFlashdata('success') ?>'
+      })
+    <?php endif; ?>
+    <?php if (session()->getFlashdata('error')): ?>
+      Toast.fire({
+        icon: 'error',
+        title: '<?= session()->getFlashdata('error') ?>'
+      })
+    <?php endif; ?>
   </script>
 </body>
 

@@ -15,20 +15,28 @@
   <!-- Logo Wrapper -->
   <div class="flex items-center gap-3 p-4">
     <a href="<?= base_url('dashboard') ?>" class="flex items-center gap-3">
-      <img src="<?= base_url('image_assets/asvi.png') ?>" alt="Logo" class="h-10 w-auto">
+      <img src="<?= base_url('uploads/profile/' . esc($web_profile['logo'] ?? 'default_logo.png')) ?>" alt="Logo" class="h-10 w-auto object-contain">
       <div class="sidebar-logo-text">
-        <span class="text-white font-bold text-lg block">SMK As-Syafi'iyah</span>
-        <span class="text-slate-400 text-sm">App Perpustakaan</span>
+        <span class="text-white font-bold text-lg block leading-tight"><?= esc($web_profile['nama_instansi'] ?? 'Nama Instansi') ?></span>
+        <span class="text-slate-400 text-sm"><?= esc($web_profile['nama_aplikasi'] ?? 'App Perpustakaan') ?></span>
       </div>
     </a>
   </div>
 
   <!-- Menu -->
   <nav class="flex-1 space-y-4 p-4">
-    <!-- Menu Utama -->
-    <a href="<?= base_url('dashboard') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= ($current_page ?? '') === 'dashboard' ? $active_class : $inactive_class ?>">
-      <i class="fas fa-tachometer-alt w-5 text-center"></i> <span class="sidebar-text">Dashboard</span>
-    </a>
+    <!-- Grup Menu Utama -->
+    <div>
+      <h3 class="sidebar-menu-title px-3 text-xs font-semibold uppercase text-slate-500 mb-2"><span class="sidebar-text">Utama</span></h3>
+      <div class="flex flex-col space-y-1">
+        <a href="<?= base_url('dashboard') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= ($current_page ?? '') === 'dashboard' ? $active_class : $inactive_class ?>">
+          <i class="fas fa-tachometer-alt w-5 text-center"></i> <span class="sidebar-text">Dashboard</span>
+        </a>
+        <a href="<?= base_url('profile-web') ?>" class="sidebar-menu-item flex items-center gap-3 rounded-md px-3 py-2 <?= ($current_page ?? '') === 'profile-web' ? $active_class : $inactive_class ?>">
+          <i class="fas fa-cogs w-5 text-center"></i> <span class="sidebar-text">Profil Web</span>
+        </a>
+      </div>
+    </div>
 
     <!-- Master Data -->
     <div>

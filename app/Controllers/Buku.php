@@ -14,36 +14,24 @@ class Buku extends BaseController
         $bukuModel = new BukuModel();
         $kategoriModel = new KategoriModel(); 
         
-        // Query untuk mengambil buku beserta kategori-kategorinya (digabungkan)
-        $allBooks = $bukuModel->select('buku.*, GROUP_CONCAT(kategori.nama_kategori SEPARATOR ", ") as kategori_nama, GROUP_CONCAT(kategori.id_kategori SEPARATOR ",") as kategori_ids')
-                              ->join('buku_kategori', 'buku_kategori.buku_id = buku.id', 'left')
-                              ->join('kategori', 'kategori.id_kategori = buku_kategori.kategori_id', 'left')
-                              ->groupBy('buku.id')
-                              ->orderBy('buku.judul_buku', 'ASC')
-                              ->findAll();
+        // Ambil semua buku beserta kategori-nya
+        $allBooks = $bukuModel->select('buku.*, 
+            GROUP_CONCAT(kategori.nama_kategori SEPARATOR ", ") as kategori_nama, 
+            GROUP_CONCAT(kategori.id_kategori SEPARATOR ",") as kategori_ids')
+            ->join('buku_kategori', 'buku_kategori.buku_id = buku.id', 'left')
+            ->join('kategori', 'kategori.id_kategori = buku_kategori.kategori_id', 'left')
+            ->groupBy('buku.id')
+            ->orderBy('buku.judul_buku', 'ASC')
+            ->findAll();
 
-        // Tampilan tidak lagi dikelompokkan, jadi kita kirim data buku langsung
         $data['buku'] = $allBooks;
-
-        /*
-        // Logika pengelompokan tidak lagi relevan untuk tampilan saat ini
-        // Kelompokkan buku berdasarkan kategori
-        $groupedBooks = [];
-        foreach ($allBooks as $book) {
-            $categoryName = $book['nama_kategori'] ?? 'Tanpa Kategori';
-            $groupedBooks[$categoryName][] = $book;
-        }
-
-        $data['groupedBooks'] = $groupedBooks;
-        */
-
-        // Data untuk kartu statistik
+        // Data kartu statistik
         $data['total_judul_buku'] = count($allBooks);
         $data['total_stok_buku'] = $bukuModel->selectSum('stok')->get()->getRow()->stok ?? 0;
 
         $data['kategori'] = $kategoriModel->findAll();
         $data['validation'] = \Config\Services::validation();
- 
+
         return view('pages/admin/buku', $data);
     }
     
@@ -159,15 +147,21 @@ class Buku extends BaseController
             'file_pdf'     => 'max_size[file_pdf,5120]|ext_in[file_pdf,pdf]' // Validasi untuk PDF
         ];
 
-        // Ambil data buku sebelum diupdate untuk dikirim kembali jika validasi gagal
-        $oldBook = $bukuModel->find($id);
-
         if (!$this->validate($rules)) {
+            // SOLUSI: Ambil data buku LENGKAP dengan kategori_ids untuk dikirim kembali jika validasi gagal
+            $bookToEdit = $bukuModel->select('buku.*, GROUP_CONCAT(kategori.nama_kategori SEPARATOR ", ") as kategori_nama, GROUP_CONCAT(kategori.id_kategori SEPARATOR ",") as kategori_ids')
+                                    ->join('buku_kategori', 'buku_kategori.buku_id = buku.id', 'left')
+                                    ->join('kategori', 'kategori.id_kategori = buku_kategori.kategori_id', 'left')
+                                    ->where('buku.id', $id)
+                                    ->groupBy('buku.id')
+                                    ->first();
+            
             session()->setFlashdata('show_edit_modal', true);
-            session()->setFlashdata('book_to_edit', $oldBook); // Kirim data buku lama
+            session()->setFlashdata('book_to_edit', $bookToEdit); // Kirim data buku yang sudah lengkap
             return redirect()->to('/buku')->withInput()->with('validation', $validation);
         }
 
+        $oldBook = $bukuModel->find($id); // Ambil data buku lama untuk proses file
         $imageName = $oldBook['image'];
         $newPdfName = $oldBook['file_pdf'] ?? '';
 
@@ -240,6 +234,12 @@ class Buku extends BaseController
         $bukuModel = new BukuModel();
         $book = $bukuModel->find($id);
 
+        // PERBAIKAN: Cek apakah buku sedang dipinjam atau dibooking
+        if ($book && ($book['dipinjam'] > 0 || $book['dibooking'] > 0)) {
+            session()->setFlashdata('error', 'Buku tidak dapat dihapus karena sedang dalam proses peminjaman atau booking.');
+            return redirect()->to('/buku');
+        }
+
         if ($book) {
             // Hapus gambar jika bukan default
             if ($book['image'] && $book['image'] !== 'default.jpg' && file_exists(ROOTPATH . 'public/uploads/' . $book['image'])) {
@@ -294,6 +294,28 @@ class Buku extends BaseController
         return $this->response
             ->setHeader('Content-Type', $result->getMimeType())
             ->setBody($result->getString());
+    }
+
+    /**
+     * Mengambil buku terkait berdasarkan kategori.
+     *
+     * @param int|null $categoryId ID kategori
+     * @param int      $excludeBookId ID buku yang tidak akan ditampilkan
+     * @param int      $limit Jumlah buku yang akan diambil
+     * @return array
+     */
+    public function getRelatedBooks($categoryId, $excludeBookId, $limit = 5)
+    {
+        if (!$categoryId) {
+            return [];
+        }
+
+        return $this->select('buku.*')
+            ->join('buku_kategori', 'buku_kategori.buku_id = buku.id')
+            ->where('buku_kategori.kategori_id', $categoryId)
+            ->where('buku.id !=', $excludeBookId)
+            ->limit($limit)
+            ->findAll();
     }
 }
 ?>

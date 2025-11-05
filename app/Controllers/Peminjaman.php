@@ -7,6 +7,7 @@ use App\Models\PeminjamanModel;
 use App\Models\DendaModel;
 use App\Models\DetailPeminjamanModel;
 use App\Models\BukuModel;
+use App\Models\WebProfileModel;
 
 class Peminjaman extends BaseController
 {
@@ -35,6 +36,7 @@ class Peminjaman extends BaseController
         $detailPeminjamanModel = new DetailPeminjamanModel();
         $bukuModel = new BukuModel();
         $dendaModel = new DendaModel();
+        $webProfileModel = new WebProfileModel();
 
         // 1. Validasi peminjaman
         $peminjaman = $peminjamanModel->find($peminjamanId);
@@ -42,8 +44,11 @@ class Peminjaman extends BaseController
             return redirect()->to('/peminjaman')->with('error', 'Transaksi peminjaman tidak valid atau sudah dikembalikan.');
         }
 
+        // Ambil pengaturan dari profil web
+        $profile = $webProfileModel->find(1) ?? ['denda_per_hari' => 1000];
+
         // 2. Hitung denda jika terlambat
-        $dendaPerHari = 1000; // Contoh: denda Rp1.000 per hari
+        $dendaPerHari = $profile['denda_per_hari'];
         $totalDenda = 0;
         $tanggalKembali = new \DateTime($peminjaman['tanggal_kembali']);
         $tanggalDikembalikan = new \DateTime(date('Y-m-d'));

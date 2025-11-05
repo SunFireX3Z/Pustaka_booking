@@ -111,8 +111,9 @@ class CreatePerpustakaanTables extends Migration
             'id_denda'    => ['type' => 'INT','constraint' => 11,'unsigned' => true,'auto_increment' => true],
             'id_user'     => ['type' => 'INT','constraint' => 11,'unsigned' => true],
             'id_pinjam'   => ['type' => 'INT','constraint' => 11,'unsigned' => true],
-            'jumlah_denda'=> ['type' => 'DECIMAL','constraint' => '10,2'],
+            'jumlah_denda'=> ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0.00],
             'status'      => ['type' => 'ENUM("belum bayar","sudah bayar")','default' => 'belum bayar'],
+            'tanggal_bayar' => ['type' => 'DATETIME', 'null' => true],
         ]);
         $this->forge->addKey('id_denda', true);
         $this->forge->addForeignKey('id_user', 'user', 'id', 'CASCADE', 'CASCADE');

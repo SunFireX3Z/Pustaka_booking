@@ -9,8 +9,15 @@ class Auth extends Controller
 {
     public function index()
     {
-        helper(['form']);
-        return view('auth/login');
+        // Jika sudah login, arahkan ke dashboard
+        if (session()->get('logged_in')) {
+            return redirect()->to('/dashboard');
+        }
+
+        $data = [
+            'web_profile' => get_web_profile()
+        ];
+        return view('auth/login', $data);
     }
 
     public function login()

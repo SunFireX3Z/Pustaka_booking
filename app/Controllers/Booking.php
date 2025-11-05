@@ -7,6 +7,7 @@ use App\Models\DetailBookingModel;
 use App\Models\PeminjamanModel;
 use App\Models\BukuModel;
 use App\Models\DetailPeminjamanModel;
+use App\Models\WebProfileModel;
 
 class Booking extends BaseController
 {
@@ -33,6 +34,7 @@ class Booking extends BaseController
         $peminjamanModel = new PeminjamanModel();
         $detailPeminjamanModel = new DetailPeminjamanModel();
         $bukuModel = new BukuModel();
+        $webProfileModel = new WebProfileModel();
 
         // 1. Validasi booking
         $booking = $bookingModel->find($bookingId);
@@ -47,6 +49,9 @@ class Booking extends BaseController
             return redirect()->to('/booking')->with('error', 'Booking tidak memiliki buku, dibatalkan secara otomatis.');
         }
 
+        // Ambil pengaturan dari profil web
+        $profile = $webProfileModel->find(1) ?? ['max_hari_pinjam' => 7];
+
         // 3. Mulai transaksi database untuk memastikan semua proses berhasil
         $db = \Config\Database::connect();
         $db->transStart();
@@ -59,7 +64,7 @@ class Booking extends BaseController
             $peminjamanModel->insert([
                 'id_user' => $booking['id_user'],
                 'tanggal_pinjam' => date('Y-m-d'),
-                'tanggal_kembali' => date('Y-m-d', strtotime('+7 days')), // Atur batas waktu peminjaman (contoh: 7 hari)
+                'tanggal_kembali' => date('Y-m-d', strtotime('+' . $profile['max_hari_pinjam'] . ' days')), // Menggunakan pengaturan dari profil web
                 'status' => 'dipinjam'
             ]);
             $peminjamanId = $peminjamanModel->getInsertID();

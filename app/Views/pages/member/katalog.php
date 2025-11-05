@@ -39,34 +39,12 @@
 </head>
 <body class="bg-slate-100 text-slate-800">
 
-    <!-- Navbar -->
-    <nav class="bg-white p-4 flex justify-between items-center shadow-sm sticky top-0 z-50 border-b border-slate-200">
-        <div>
-            <a href="<?= base_url('member') ?>" class="font-bold text-xl text-indigo-600"><i class="fas fa-book-open-reader"></i> Pustaka</a>
-        </div>
-        <div class="hidden md:flex items-center space-x-6">
-            <a href="<?= base_url('member') ?>" class="font-medium text-slate-600 hover:text-indigo-600 transition duration-300">Home</a>
-            <a href="<?= base_url('member/katalog') ?>" class="font-semibold text-indigo-600">Katalog Buku</a>
-            <a href="<?= base_url('member/keranjang') ?>" class="relative font-medium text-slate-600 hover:text-indigo-600 transition duration-300">
-                Keranjang
-                <?php if (isset($cart_count) && $cart_count > 0): ?>
-                    <span class="absolute -top-2 -right-4 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full"><?= $cart_count ?></span>
-                <?php endif; ?>
-            </a>
-        </div>
-        <!-- User Dropdown -->
-        <div x-data="{ open: false }" class="relative">
-            <button @click="open = !open" class="flex items-center space-x-2 focus:outline-none">
-                <span class="hidden sm:block text-slate-700 font-medium hover:text-indigo-600"><?= esc(session()->get('nama')) ?></span>
-                <img src="<?= base_url('uploads/' . (session()->get('image') ?? 'default.png')) ?>" alt="User" class="w-9 h-9 rounded-full border-2 border-slate-200 hover:border-indigo-300 transition">
-            </button>
-            <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50 border border-slate-200">
-                <a href="<?= base_url('member/profile') ?>" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Profil Saya</a>
-                <div class="border-t border-slate-100"></div>
-                <a href="<?= base_url('logout') ?>" class="block px-4 py-2 text-sm text-red-600 hover:bg-slate-100">Logout</a>
-            </div>
-        </div>
-    </nav>
+    <?= view('pages/member/template/navbar', [
+        'current_page' => 'katalog',
+        'cart_count'   => $cart_count ?? 0,
+        'keyword'      => $keyword ?? '',
+        'web_profile'  => $web_profile ?? []
+    ]) ?>
 
     <div class="container mx-auto p-6">
         <!-- Header & Filter -->

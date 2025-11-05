@@ -35,7 +35,13 @@ abstract class BaseController extends Controller
      *
      * @var list<string>
      */
-    protected $helpers = [];
+    protected $helpers = ['auth'];
+
+    /**
+     * Global data for web profile.
+     * @var array
+     */
+    protected $web_profile = [];
 
     /**
      * Be sure to declare properties for any property fetch you initialized.
@@ -51,7 +57,15 @@ abstract class BaseController extends Controller
         // Do Not Edit This Line
         parent::initController($request, $response, $logger);
 
-        // Preload any models, libraries, etc, here.
+        // Preload the web profile data for all views
+        // Pastikan tidak berjalan di CLI untuk menghindari error pada migrasi/seeding
+        if (!($request instanceof CLIRequest)) {
+            // Gunakan helper yang sudah kita buat
+            $this->web_profile = get_web_profile();
+            // Bagikan data ke semua view yang dirender oleh controller ini
+            $this->view = \Config\Services::renderer();
+            $this->view->setData(['web_profile' => $this->web_profile]);
+        }
 
         // E.g.: $this->session = service('session');
     }

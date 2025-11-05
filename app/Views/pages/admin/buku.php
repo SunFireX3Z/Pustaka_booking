@@ -11,12 +11,6 @@
   <!-- Tom Select -->
   <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
   <style>
-    .modal-enter { opacity: 0; transform: translateY(-20px); }
-    .modal-enter-active { opacity: 1; transform: translateY(0); transition: all 0.3s ease-out; }
-    .modal-leave { opacity: 1; transform: translateY(0); }
-    .modal-leave-active { opacity: 0; transform: translateY(-20px); transition: all 0.2s ease-in; }
-
-    /* Animasi untuk SweetAlert2 Toast */
     @keyframes toast-in-right {
       from {
         transform: translateX(100%);
@@ -33,6 +27,12 @@
     .swal2-hide.swal2-toast {
       animation: none; /* Biarkan SweetAlert menangani animasi keluar */
     }
+  </style>
+  <style>
+    .modal-enter { opacity: 0; transform: translateY(-20px); }
+    .modal-enter-active { opacity: 1; transform: translateY(0); transition: all 0.3s ease-out; }
+    .modal-leave { opacity: 1; transform: translateY(0); }
+    .modal-leave-active { opacity: 0; transform: translateY(-20px); transition: all 0.2s ease-in; }
   </style>
   <style>
     .card-item {
@@ -166,12 +166,37 @@
                 <!-- Info Buku -->
                 <div class="p-4 flex-grow flex flex-col sm:flex-row justify-between items-start">
                   <div class="flex-grow">
-                    <div class="text-xs font-semibold text-green-800 mb-1 flex flex-wrap gap-1">
-                      <?php foreach(explode(', ', $row['kategori_nama']) as $kat): ?><span class="bg-green-100 px-2 py-0.5 rounded-full"><?= esc($kat) ?></span><?php endforeach; ?></div>
+                    <div class="text-xs font-semibold text-gray-600 mb-1 flex flex-wrap items-center gap-1">
+                      <?php
+                        $kategori_list = (!empty($row['kategori_nama'])) ? explode(', ', $row['kategori_nama']) : [];
+                        $total_kategori = count($kategori_list);
+                        $max_kategori_tampil = 2; // Batas kategori yang ditampilkan
+                      ?>
+                      <?php foreach($kategori_list as $index => $kat): ?>
+                        <?php if($index < $max_kategori_tampil): ?>
+                          <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded-full"><?= esc($kat) ?></span>
+                        <?php endif; ?>
+                      <?php endforeach; ?>
+                      <?php if($total_kategori > $max_kategori_tampil): ?>
+                        <span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">+<?= $total_kategori - $max_kategori_tampil ?> lagi</span>
+                      <?php endif; ?>
+                    </div>
                     <h3 class="text-lg font-bold text-gray-800 leading-tight"><?= esc($row['judul_buku']) ?></h3>
-                    <p class="text-sm text-gray-500">Oleh: <?= esc($row['pengarang']) ?></p>
+                    <p class="text-sm text-gray-500" title="Oleh: <?= esc($row['pengarang']) ?>">Oleh: 
+                      <?php
+                        $pengarang = $row['pengarang'];
+                        $limit = 25; // Batas karakter
+                        echo esc(strlen($pengarang) > $limit ? substr($pengarang, 0, $limit) . '...' : $pengarang);
+                      ?>
+                    </p>
                     <div class="text-xs text-gray-500 mt-2 flex items-center gap-3">
-                      <span><i class="fas fa-building mr-1"></i> <?= esc($row['penerbit']) ?></span>
+                      <span title="<?= esc($row['penerbit']) ?>"><i class="fas fa-building mr-1"></i> 
+                        <?php
+                          $penerbit = $row['penerbit'];
+                          $limit = 25; // Batas karakter
+                          echo esc(strlen($penerbit) > $limit ? substr($penerbit, 0, $limit) . '...' : $penerbit);
+                        ?>
+                      </span>
                       <span><i class="fas fa-calendar-alt mr-1"></i> <?= esc($row['tahun_terbit']) ?></span>
                       <span class="font-medium <?= $row['stok'] > 0 ? 'text-green-600' : 'text-red-600' ?>">
                         <i class="fas fa-box-open mr-1"></i> Stok: <?= esc($row['stok']) ?>
@@ -185,7 +210,7 @@
                       <i class="fas fa-qrcode text-sm"></i>
                     </a>
                     <button onclick="showDetail(this)" class="w-9 h-9 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors" title="Lihat Detail"
-                      data-judul="<?= esc($row['judul_buku']) ?>" data-penerbit="<?= esc($row['penerbit']) ?>" data-pengarang="<?= esc($row['pengarang']) ?>" data-tahun="<?= esc($row['tahun_terbit']) ?>" data-stok="<?= esc($row['stok']) > 0 ? $row['stok'] . ' Tersedia' : 'Kosong' ?>" data-kategori="<?= esc($row['kategori_nama'] ?? 'Tidak ada kategori') ?>" data-deskripsi="<?= esc($row['deskripsi'] ?? '-') ?>" data-image="<?= base_url('uploads/' . $row['image']) ?>" data-pdf="<?= !empty($row['file_pdf']) ? base_url('uploads/pdf/' . esc($row['file_pdf'])) : '' ?>" data-eisbn="<?= esc($row['eisbn'] ?? '-') ?>">
+                      data-judul="<?= esc($row['judul_buku']) ?>" data-penerbit="<?= esc($row['penerbit']) ?>" data-pengarang="<?= esc($row['pengarang']) ?>" data-tahun="<?= esc($row['tahun_terbit']) ?>" data-stok="<?= esc($row['stok']) > 0 ? $row['stok'] . ' Tersedia' : 'Kosong' ?>" data-kategori="<?= esc($row['kategori_nama'] ?? 'Tidak ada kategori') ?>" data-deskripsi="<?= esc($row['deskripsi'] ?? '-') ?>" data-image="<?= base_url('uploads/' . $row['image']) ?>" data-pdf="<?= !empty($row['file_pdf']) ? base_url('uploads/pdf/' . esc($row['file_pdf'])) : '' ?>" data-isbn="<?= esc($row['isbn']) ?>" data-eisbn="<?= esc($row['eisbn'] ?? '-') ?>">
                       <i class="fas fa-eye text-sm"></i>
                     </button>
                     <button onclick="openEditModal(<?= htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8') ?>)" class="w-9 h-9 flex items-center justify-center rounded-full text-green-500 hover:bg-green-100 transition-colors" title="Edit">
@@ -256,6 +281,13 @@
                 <div>
                   <p class="text-gray-500">Stok</p>
                   <p id="modalStok" class="font-semibold"></p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-barcode fa-fw text-gray-400 text-xl"></i> 
+                <div>
+                  <p class="text-gray-500">ISBN</p>
+                  <p id="modalIsbn" class="font-semibold"></p>
                 </div>
               </div>
               <div class="flex items-center gap-3">
@@ -368,6 +400,7 @@
           <div class="col-span-2" id="edit-kategori-wrapper">
             <label for="edit_kategori_ids" class="block text-sm font-medium text-gray-700">Kategori</label>
             <select id="edit_kategori_ids" name="kategori_ids[]" multiple placeholder="Pilih satu atau lebih kategori..." required></select>
+            <div id="edit_current_kategori" class="text-xs text-gray-500 mt-1"></div>
           </div>
           <div>
             <label for="edit_pengarang" class="block text-sm font-medium text-gray-700">Pengarang</label>
@@ -453,9 +486,22 @@
     function openEditModal(bookData) {
       // Set form action
       document.getElementById('editForm').action = `<?= base_url('buku/update/') ?>/${bookData.id}`;
+      
+      // Logika untuk menangani kategori_ids, termasuk kasus ketika tidak ada kategori (null)
+      let kategoriIds = [];
+      if (bookData.kategori_ids && typeof bookData.kategori_ids === 'string' && bookData.kategori_ids.length > 0) {
+        // Untuk Tom Select, kita hanya perlu array string.
+        kategoriIds = bookData.kategori_ids.split(',').map(id => id.trim());
+      }
 
-      // Populate form fields
-      const kategoriIds = bookData.kategori_ids ? bookData.kategori_ids.split(',') : [];
+      // Tampilkan nama kategori saat ini sebagai teks
+      const currentKategoriEl = document.getElementById('edit_current_kategori');
+      if (bookData.kategori_nama && bookData.kategori_nama.length > 0) {
+        currentKategoriEl.innerHTML = `<strong>Kategori Saat Ini:</strong> ${bookData.kategori_nama}`;
+      } else {
+        currentKategoriEl.innerHTML = `<strong>Kategori Saat Ini:</strong> -`;
+      }
+      // Set nilai ke Tom Select
       if (window.tomSelectEdit) window.tomSelectEdit.setValue(kategoriIds);
 
       document.getElementById('edit_judul_buku').value = bookData.judul_buku;
@@ -529,6 +575,7 @@
       document.getElementById('modalDeskripsi').innerText = getValue(element.dataset.deskripsi);
       document.getElementById('modalImage').src = getValue(element.dataset.image);
       document.getElementById('modalEisbn').innerText = getValue(element.dataset.eisbn);
+      document.getElementById('modalIsbn').innerText = getValue(element.dataset.isbn);
 
       // Handle PDF button in detail modal
       const pdfUrl = element.dataset.pdf;

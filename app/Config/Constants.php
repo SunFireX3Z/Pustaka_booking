@@ -38,9 +38,13 @@ defined('MINUTE') || define('MINUTE', 60);
 defined('HOUR')   || define('HOUR', 3600);
 defined('DAY')    || define('DAY', 86400);
 defined('WEEK')   || define('WEEK', 604800);
-defined('MONTH')  || define('MONTH', 2_592_000);
-defined('YEAR')   || define('YEAR', 31_536_000);
-defined('DECADE') || define('DECADE', 315_360_000);
+defined('MONTH')  || define('MONTH', 2592000);
+defined('YEAR')   || define('YEAR', 31536000);
+
+/**
+ * Besaran denda per hari untuk keterlambatan pengembalian buku.
+ */
+defined('DENDA_PER_HARI') || define('DENDA_PER_HARI', 1000); // Rp 1.000 per hari
 
 /*
  | --------------------------------------------------------------------------

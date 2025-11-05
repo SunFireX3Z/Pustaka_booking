@@ -16,13 +16,14 @@ $routes->get('logout', 'Auth::logout');
 // Grup Rute untuk Member (memerlukan login dan peran member)
 $routes->group('member', ['filter' => 'member'], static function ($routes) {
     $routes->get('/', 'Member::index');
-    $routes->get('buku/(:num)', 'Member::detailBuku/$1');
-    $routes->post('book/(:num)', 'Member::bookNow/$1');
     $routes->get('profile', 'Member::profile');
     $routes->get('keranjang', 'Member::keranjang');
+    $routes->post('selesaikan-booking', 'Member::selesaikanBooking'); // Rute yang benar untuk menyelesaikan booking
     $routes->get('keranjang/hapus/(:num)', 'Member::hapusDariKeranjang/$1');
-    $routes->get('berita/detail/(:num)', 'Member::detailBerita/$1');
     $routes->get('katalog', 'Member::katalog');
+    $routes->get('buku/(:num)', 'Member::detailBuku/$1');
+    $routes->post('book/(:num)', 'Member::bookNow/$1'); // Perbaikan: Seharusnya mengarah ke bookNow
+    $routes->get('berita/detail/(:num)', 'Member::detailBerita/$1');
 });
 
 // Grup Rute untuk Admin & Petugas (memerlukan login dan peran admin/petugas)
@@ -76,5 +77,17 @@ $routes->group('', ['filter' => 'admin'], static function ($routes) {
     $routes->get('booking/delete/(:num)', 'Booking::delete/$1');
     $routes->get('booking/getDetailBooking/(:num)', 'Booking::getDetailBooking/$1');
     $routes->get('denda', 'Denda::index');
+    $routes->get('denda/bayar/(:num)', 'Denda::bayar/$1');
+    $routes->get('denda/delete/(:num)', 'Denda::delete/$1');
     $routes->get('laporan', 'Laporan::index');
+    $routes->get('laporan/buku-excel', 'Laporan::bukuExcel');
+    $routes->get('laporan/buku-pdf', 'Laporan::bukuPdf');
+    $routes->get('laporan/anggota-excel', 'Laporan::anggotaExcel');
+    $routes->get('laporan/anggota-pdf', 'Laporan::anggotaPdf');
+    $routes->get('laporan/peminjaman-excel', 'Laporan::peminjamanExcel');
+    $routes->get('laporan/peminjaman-pdf', 'Laporan::peminjamanPdf');
+
+    // Rute untuk Profil Website
+    $routes->get('profile-web', 'ProfileWeb::index');
+    $routes->post('profile-web/update', 'ProfileWeb::update');
 });

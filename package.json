@@ -1,6 +1,17 @@
 {
+  "name": "pustaka_booking",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "copy:pdfjs": "node scripts/copy-assets.js",
+    "postinstall": "npm run copy:pdfjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "@tailwindcss/cli": "^4.1.13",
-    "tailwindcss": "^4.1.13"
+    "pdfjs-dist": "^4.4.168"
   }
 }

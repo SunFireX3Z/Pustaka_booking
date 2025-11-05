@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Login Perpustakaan | SMK As-SYAFI'IYAH</title>
+  <title>Login - <?= esc($web_profile['nama_aplikasi'] ?? 'Aplikasi Perpustakaan') ?></title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
@@ -23,10 +23,10 @@
 
 <body class="flex items-center justify-center min-h-screen p-4">
   <div id="login-card" class="glass-card w-full max-w-sm rounded-2xl p-8">
-    <div class="flex flex-col items-center mb-8">
-      <img src="<?= base_url('image_assets/asvi.png') ?>" alt="Logo" class="h-16 w-auto mb-4">
-      <h2 class="text-2xl font-bold text-center text-white">Login Perpustakaan</h2>
-      <p class="text-sm text-gray-200">Silakan masuk untuk melanjutkan</p>
+    <div class="flex flex-col items-center mb-8 text-center">
+      <img src="<?= base_url('uploads/profile/' . esc($web_profile['logo'] ?? 'default_logo.png')) ?>" alt="Logo" class="h-16 w-auto mb-4 object-contain">
+      <h2 class="text-2xl font-bold text-white"><?= esc($web_profile['nama_instansi'] ?? 'Nama Instansi') ?></h2>
+      <p class="text-sm text-gray-200">Selamat datang di <?= esc($web_profile['nama_aplikasi'] ?? 'Aplikasi Perpustakaan') ?></p>
     </div>
 
     <?php if(session()->getFlashdata('msg')): ?>
