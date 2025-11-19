@@ -19,6 +19,7 @@ class Booking extends BaseController
         $data['bookings'] = $bookingModel->select('booking.*, user.nama as nama_user, COUNT(detail_booking.id_buku) as jumlah_buku')
             ->join('user', 'user.id = booking.id_user')
             ->join('detail_booking', 'detail_booking.id_booking = booking.id_booking', 'left')
+            ->whereIn('booking.status', ['dibooking', 'disetujui', 'dibatalkan']) // Hanya tampilkan status yang relevan untuk admin
             ->groupBy('booking.id_booking')
             ->orderBy('booking.tanggal_booking', 'DESC')
             ->findAll();
@@ -38,7 +39,7 @@ class Booking extends BaseController
 
         // 1. Validasi booking
         $booking = $bookingModel->find($bookingId);
-        if (!$booking || $booking['status'] !== 'pending') {
+        if (!$booking || $booking['status'] !== 'dibooking') {
             return redirect()->to('/booking')->with('error', 'Booking tidak valid atau sudah diproses.');
         }
 
@@ -97,7 +98,7 @@ class Booking extends BaseController
 
         // 1. Validasi booking
         $booking = $bookingModel->find($bookingId);
-        if (!$booking || $booking['status'] !== 'pending') {
+        if (!$booking || $booking['status'] !== 'dibooking') {
             return redirect()->to('/booking')->with('error', 'Booking tidak valid atau sudah diproses.');
         }
 

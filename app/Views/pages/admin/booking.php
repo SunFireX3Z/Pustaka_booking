@@ -105,13 +105,13 @@
                   <span class="px-2 py-1 text-xs font-semibold rounded-full <?= $statusClass ?>">
                     <?= esc(ucfirst($booking['status'])) ?>
                   </span>
-                </td>
+                </td> 
                 <td class="py-3 px-6 text-center">
                   <div class="flex item-center justify-center gap-2">
                     <button onclick="showDetailModal(<?= esc($booking['id_booking']) ?>)" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors" title="Lihat Detail">
                       <i class="fas fa-eye text-sm"></i>
                     </button>
-                    <?php if ($booking['status'] == 'pending'): ?>
+                    <?php if ($booking['status'] == 'dibooking'): ?>
                       <a href="<?= base_url('booking/approve/' . $booking['id_booking']) ?>" onclick="return confirm('Anda yakin ingin menyetujui booking ini? Aksi ini akan membuat transaksi peminjaman baru.')" class="w-8 h-8 flex items-center justify-center rounded-full text-green-500 hover:bg-green-100 transition-colors" title="Setujui Booking">
                         <i class="fas fa-check text-sm"></i>
                       </a>

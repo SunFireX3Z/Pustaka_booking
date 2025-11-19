@@ -63,6 +63,13 @@
             line-height: 1.2;
         }
 
+        .header .info .subtitle {
+            margin: 4px 0 0;
+            font-size: 14px;
+            color: #666;
+            font-style: italic;
+        }
+
         /* ==== JUDUL ==== */
         h3 {
             text-align: center;
@@ -129,7 +136,13 @@
         <div class="info">
             <h1><?= esc($web_profile['nama_instansi'] ?? 'Nama Instansi') ?></h1>
             <h2><?= esc($web_profile['nama_aplikasi'] ?? 'Aplikasi Perpustakaan') ?></h2>
-            <p><?= esc($web_profile['alamat'] ?? 'Alamat Instansi') ?>, <?= esc($web_profile['kabupaten_kota'] ?? 'Kota') ?></p>
+            <?php if (!empty($subtitle)): ?>
+                <h4 class="subtitle"><?= esc($subtitle) ?></h4>
+            <?php endif; ?>
+            <p>
+                <?= esc($web_profile['alamat'] ?? 'Alamat Instansi') ?>,
+                <?= esc($web_profile['kabupaten_kota'] ?? 'Kota') ?>
+            </p>
         </div>
     </div>
 
@@ -143,9 +156,8 @@
                 <th>No</th>
                 <th>Nama Anggota</th>
                 <th>Judul Buku</th>
-                <th>Tgl Pinjam</th>
-                <th>Tgl Kembali</th>
-                <th>Tgl Dikembalikan</th>
+                <th>Tgl Peminjaman</th>
+                <th>Keterangan Pengembalian</th>
                 <th>Status</th>
                 <th>Denda</th>
             </tr>
@@ -153,17 +165,22 @@
         <tbody>
             <?php if (empty($peminjaman)): ?>
                 <tr>
-                    <td colspan="8" style="text-align:center;">Tidak ada data peminjaman.</td>
+                    <td colspan="7" style="text-align:center;">Tidak ada data peminjaman.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($peminjaman as $key => $item): ?>
                     <tr>
                         <td><?= $key + 1 ?></td>
                         <td><?= esc($item['nama_user']) ?></td>
-                        <td><?= esc($item['judul_buku'] ?? 'N/A') ?></td>
+                        <td style="max-width: 200px;"><?= esc($item['judul_buku'] ?? 'N/A') ?></td>
                         <td><?= date('d M Y', strtotime($item['tanggal_pinjam'])) ?></td>
-                        <td><?= date('d M Y', strtotime($item['tanggal_kembali'])) ?></td>
-                        <td><?= $item['tanggal_dikembalikan'] ? date('d M Y', strtotime($item['tanggal_dikembalikan'])) : '-' ?></td>
+                        <td>
+                            <div style="margin-bottom: 3px;"><b>Jatuh Tempo:</b> <?= date('d M Y', strtotime($item['tanggal_kembali'])) ?></div>
+                            <div>
+                                <b>Dikembalikan:</b> 
+                                <?= $item['tanggal_dikembalikan'] ? date('d M Y', strtotime($item['tanggal_dikembalikan'])) : '-' ?>
+                            </div>
+                        </td>
                         <td><?= esc(ucfirst($item['status'])) ?></td>
                         <td>Rp <?= number_format($item['total_denda'], 0, ',', '.') ?></td>
                     </tr>

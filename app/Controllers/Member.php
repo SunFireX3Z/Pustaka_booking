@@ -312,13 +312,63 @@ class Member extends BaseController
         return redirect()->to('/member/keranjang')->with('success', 'Buku berhasil dihapus dari keranjang.');
     }
 
+    public function batalKeranjang()
+    {
+        $bookingModel = new BookingModel();
+        $detailBookingModel = new DetailBookingModel();
+        $bukuModel = new BukuModel();
+        $userId = session()->get('user_id');
+
+        // 1. Cari booking yang masih pending
+        $booking = $bookingModel->where('id_user', $userId)->where('status', 'pending')->first();
+
+        if (!$booking) {
+            return redirect()->to('/member/keranjang')->with('error', 'Tidak ada keranjang aktif untuk dibatalkan.');
+        }
+
+        // 2. Ambil semua item di keranjang
+        $items = $detailBookingModel->where('id_booking', $booking['id_booking'])->findAll();
+
+        // 3. Mulai transaksi database
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        try {
+            // 4. Kembalikan stok untuk setiap buku
+            if (!empty($items)) {
+                foreach ($items as $item) {
+                    $bukuModel->set('stok', 'stok + 1', false)->set('dibooking', 'dibooking - 1', false)->where('id', $item['id_buku'])->update();
+                }
+            }
+
+            // 5. Hapus record booking dan detailnya
+            $detailBookingModel->where('id_booking', $booking['id_booking'])->delete();
+            $bookingModel->delete($booking['id_booking']);
+
+            $db->transComplete();
+
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => true, 'message' => 'Keranjang booking Anda telah dikosongkan.']);
+            }
+            return redirect()->to('/member/katalog')->with('success', 'Keranjang booking Anda telah dikosongkan.');
+        } catch (\Exception $e) {
+            $db->transRollback();
+
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Gagal membatalkan keranjang.']);
+            }
+            return redirect()->to('/member/keranjang')->with('error', 'Gagal membatalkan keranjang.');
+        }
+    }
+
     public function selesaikanBooking()
     {
         $bookingModel = new BookingModel();
         $userId = session()->get('user_id');
 
         // 1. Pastikan method diakses via POST
-        if ($this->request->getMethod() !== 'post') {
+        // Menggunakan is('post') untuk pengecekan yang lebih andal
+        if (!$this->request->is('post')) {
             return redirect()->to('/member/keranjang')->with('error', 'Aksi tidak valid.');
         }
 
@@ -338,8 +388,13 @@ class Member extends BaseController
 
         $bookingModel->update($booking['id_booking'], $dataToUpdate);
 
-        return redirect()->to('/member/profile')->with('success', 'Booking Anda telah dikonfirmasi. Silakan ambil buku di perpustakaan sesuai jadwal.');
-    }
+        // Jika ini adalah request AJAX, kirim response JSON
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Booking Anda telah dikonfirmasi!']);
+        }
+
+        return redirect()->to('/member/katalog')->with('success', 'Booking Anda telah dikonfirmasi!');
+    }    
 
     public function katalog()
     {

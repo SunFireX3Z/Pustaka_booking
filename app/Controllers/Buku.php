@@ -13,24 +13,48 @@ class Buku extends BaseController
     {
         $bukuModel = new BukuModel();
         $kategoriModel = new KategoriModel(); 
+
+        // Ambil parameter filter dari URL
+        $keyword = $this->request->getGet('keyword');
+        $kategoriFilter = $this->request->getGet('kategori');
         
-        // Ambil semua buku beserta kategori-nya
-        $allBooks = $bukuModel->select('buku.*, 
+        // Mulai query builder
+        $query = $bukuModel->select('buku.*, 
             GROUP_CONCAT(kategori.nama_kategori SEPARATOR ", ") as kategori_nama, 
             GROUP_CONCAT(kategori.id_kategori SEPARATOR ",") as kategori_ids')
             ->join('buku_kategori', 'buku_kategori.buku_id = buku.id', 'left')
             ->join('kategori', 'kategori.id_kategori = buku_kategori.kategori_id', 'left')
-            ->groupBy('buku.id')
-            ->orderBy('buku.judul_buku', 'ASC')
-            ->findAll();
+            ->groupBy('buku.id');
 
-        $data['buku'] = $allBooks;
+        // Terapkan filter keyword jika ada
+        if ($keyword) {
+            $query->groupStart()
+                  ->like('judul_buku', $keyword)
+                  ->orLike('pengarang', $keyword)
+                  ->orLike('penerbit', $keyword)
+                  ->groupEnd();
+        }
+
+        // Terapkan filter kategori jika ada
+        if ($kategoriFilter && $kategoriFilter !== 'all') {
+            $query->whereIn('buku.id', function($builder) use ($kategoriFilter) {
+                return $builder->select('buku_id')->from('buku_kategori')->where('kategori_id', $kategoriFilter);
+            });
+        }
+
+        $data['buku'] = $query->orderBy('buku.judul_buku', 'ASC')->findAll();
+        $data['pager'] = null; // Tidak ada paginasi
+
+        $allBooks = $bukuModel->findAll(); // Untuk perhitungan statistik
         // Data kartu statistik
         $data['total_judul_buku'] = count($allBooks);
         $data['total_stok_buku'] = $bukuModel->selectSum('stok')->get()->getRow()->stok ?? 0;
 
         $data['kategori'] = $kategoriModel->findAll();
         $data['validation'] = \Config\Services::validation();
+        // Kirim nilai filter kembali ke view agar tetap terpilih
+        $data['keyword'] = $keyword;
+        $data['selected_kategori'] = $kategoriFilter;
 
         return view('pages/admin/buku', $data);
     }

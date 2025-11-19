@@ -199,4 +199,75 @@ class App extends BaseConfig
      * @see http://www.w3.org/TR/CSP/
      */
     public bool $CSPEnabled = false;
+
+    /**
+     * --------------------------------------------------------------------------
+     * Session Driver
+     * --------------------------------------------------------------------------
+     *
+     * The session storage driver to use:
+     * - `CodeIgniter\Session\Handlers\FileHandler`
+     * - `CodeIgniter\Session\Handlers\DatabaseHandler`
+     * - `CodeIgniter\Session\Handlers\MemcachedHandler`
+     * - `CodeIgniter\Session\Handlers\RedisHandler`
+     *
+     * @var string
+     */
+    public string $sessionDriver = \CodeIgniter\Session\Handlers\DatabaseHandler::class;
+
+    /**
+     * The location to save sessions to, driver dependent.
+     *
+     * For the 'files' driver, it's a path to a writable directory.
+     * For the 'database' driver, it's the table name.
+     * For 'memcached', it's serverpools.
+     * For 'redis', it's connection info.
+     */
+    public string $sessionSavePath = 'ci_sessions';
+
+    /**
+     * The cookie name to use for sessions.
+     */
+    public string $sessionCookieName = 'ci_session';
+
+    /**
+     * The number of SECONDS you want the session to last.
+     * Setting to 0 (zero) means expire when the browser is closed.
+     */
+    public int $sessionExpiration = 7200;
+
+    /**
+     * The number of SECONDS that should pass before the session is
+     * automatically regenerated. Set to 0 to disable regeneration.
+     */
+    public int $sessionRegenerateTime = 300;
+
+    /**
+     * Whether to destroy the session data when the session expires.
+     */
+    public bool $sessionDestroyOnExpiration = true;
+
+    /**
+     * The path to which session cookies will be sent.
+     * Typically will be a forward slash.
+     */
+    public string $sessionCookiePath = '/';
+
+    /**
+     * The domain name to which session cookies will be sent.
+     * Set to `.your-domain.com` for site-wide cookies.
+     */
+    public string $sessionCookieDomain = '';
+
+    /**
+     * Whether to send session cookies only over secure connections.
+     */
+    public bool $sessionCookieSecure = false;
+
+    /**
+     * The SameSite setting for session cookies.
+     *
+     * Allowed values are: None, Lax, Strict.
+     */
+    public string $sessionCookieSameSite = 'Lax';
 }

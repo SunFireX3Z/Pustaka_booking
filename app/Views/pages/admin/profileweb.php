@@ -19,6 +19,17 @@
      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
      ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
+  <style>
+    .card-item {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    }
+    .card-item.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
   <script>
     if (localStorage.getItem('sidebarCollapsed') === 'true') {
       document.documentElement.classList.add('sidebar-is-collapsed');
@@ -44,9 +55,14 @@
 
     <main class="p-6">
       <div class="w-full max-w-4xl mx-auto">
-        <div class="bg-white p-6 rounded-lg shadow-sm mb-6">
-          <h2 class="text-2xl font-bold text-green-600">Pengaturan Profil Website</h2>
-          <p class="text-sm text-gray-500 mt-1">Kelola informasi umum dan pengaturan aplikasi Anda.</p>
+        <div class="card-item relative bg-gradient-to-r from-green-500 to-blue-500 text-white p-6 rounded-lg shadow-lg mb-8 overflow-hidden">
+          <div class="absolute -right-10 -top-10">
+              <i class="fas fa-cogs text-white/10 text-9xl transform rotate-12"></i>
+          </div>
+          <div class="relative z-10">
+              <h2 class="text-3xl font-bold">Profil Website</h2>
+              <p class="mt-1 text-green-100">Kelola informasi umum, penanggung jawab, dan aturan peminjaman aplikasi.</p>
+          </div>
         </div>
 
         <?php if ($validation->getErrors()): ?>
@@ -62,114 +78,117 @@
 
         <form action="<?= base_url('profile-web/update') ?>" method="post" enctype="multipart/form-data">
           <?= csrf_field() ?>
-          <div class="bg-white rounded-lg shadow-sm p-6">
+          <!-- Card 1: Informasi Instansi & Aplikasi -->
+          <div class="card-item bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h3 class="text-xl font-bold text-gray-800 border-b pb-3 mb-4">Informasi Instansi & Aplikasi</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              <!-- Kolom Kiri -->
-              <div class="space-y-4">
-                <h3 class="text-lg font-semibold text-gray-700 border-b pb-2">Informasi Instansi</h3>
-                <div>
-                  <label for="nama_instansi" class="block text-sm font-medium text-gray-700">Nama Instansi</label>
-                  <input type="text" name="nama_instansi" id="nama_instansi" value="<?= esc($profile['nama_instansi'] ?? '') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                </div>
-                <div>
-                  <label for="nama_aplikasi" class="block text-sm font-medium text-gray-700">Nama Aplikasi</label>
-                  <input type="text" name="nama_aplikasi" id="nama_aplikasi" value="<?= esc($profile['nama_aplikasi'] ?? '') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                </div>
-                <div>
-                  <label for="alamat" class="block text-sm font-medium text-gray-700">Alamat</label>
-                  <textarea name="alamat" id="alamat" rows="3" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"><?= esc($profile['alamat'] ?? '') ?></textarea>
-                </div>
-                <div>
-                  <label for="kabupaten_kota" class="block text-sm font-medium text-gray-700">Kabupaten/Kota</label>
-                  <input type="text" name="kabupaten_kota" id="kabupaten_kota" value="<?= esc($profile['kabupaten_kota'] ?? '') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                </div>
-                <div>
-                  <label for="npwp" class="block text-sm font-medium text-gray-700">NPWP</label>
-                  <input type="text" name="npwp" id="npwp" value="<?= esc($profile['npwp'] ?? '') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                </div>
-                <div>
-                  <label for="logo" class="block text-sm font-medium text-gray-700">Logo Aplikasi</label>
-                  <div class="mt-2 flex items-center gap-4">
-                    <img id="logo_preview" src="<?= base_url('uploads/profile/' . esc($profile['logo'] ?? 'default-logo.png')) ?>" alt="Logo" class="w-16 h-16 object-contain bg-gray-100 p-1 rounded-md border">
-                    <input type="file" name="logo" id="logo" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" onchange="previewFile(this, 'logo_preview')">
-                  </div>
-                  <p class="text-xs text-gray-500 mt-1">Kosongkan jika tidak ingin mengubah logo. Rekomendasi: SVG atau PNG transparan.</p>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700">Banner Homepage Member</label>
-                  <div class="mt-2 flex items-center gap-4">
-                    <img id="banner_preview" src="<?= base_url('uploads/profile/' . ($profile['banner_image'] ?? 'default-banner.png')) ?>" alt="Banner Preview" class="w-48 h-24 object-cover rounded-md bg-gray-100 border">
-                    <div>
-                      <input type="file" name="banner_image" id="banner_image" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" onchange="previewFile(this, 'banner_preview')">
-                      <p class="text-xs text-gray-500 mt-1">PNG, JPG, WEBP (MAX. 2MB). Rasio 21:9.</p>
-                    </div>
-                  </div>
+              <div>
+                <label for="nama_instansi" class="block text-sm font-medium text-gray-700">Nama Instansi</label>
+                <div class="relative mt-1">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-building text-gray-400"></i></div>
+                  <input type="text" name="nama_instansi" id="nama_instansi" value="<?= esc($profile['nama_instansi'] ?? '') ?>" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
                 </div>
               </div>
-
-              <!-- Kolom Kanan -->
-              <div class="space-y-4">
-                <h3 class="text-lg font-semibold text-gray-700 border-b pb-2">Penanggung Jawab & Pengelola</h3>
-                <div>
-                  <label for="nama_penanggung_jawab" class="block text-sm font-medium text-gray-700">Nama Penanggung Jawab</label>
-                  <input type="text" name="nama_penanggung_jawab" id="nama_penanggung_jawab" value="<?= esc($profile['nama_penanggung_jawab'] ?? '') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                </div>
-                <div>
-                  <label for="jabatan_penanggung_jawab" class="block text-sm font-medium text-gray-700">Jabatan Penanggung Jawab</label>
-                  <input type="text" name="jabatan_penanggung_jawab" id="jabatan_penanggung_jawab" value="<?= esc($profile['jabatan_penanggung_jawab'] ?? '') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                </div>
-                <div>
-                  <label for="nama_penandatangan_mou" class="block text-sm font-medium text-gray-700">Nama Penandatangan MOU</label>
-                  <input type="text" name="nama_penandatangan_mou" id="nama_penandatangan_mou" value="<?= esc($profile['nama_penandatangan_mou'] ?? '') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                </div>
-                <div>
-                  <label for="jabatan_penandatangan_mou" class="block text-sm font-medium text-gray-700">Jabatan Penandatangan MOU</label>
-                  <input type="text" name="jabatan_penandatangan_mou" id="jabatan_penandatangan_mou" value="<?= esc($profile['jabatan_penandatangan_mou'] ?? '') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                </div>
-                <div>
-                  <label for="nama_pengelola" class="block text-sm font-medium text-gray-700">Nama Pengelola (Admin)</label> 
-                  <input type="text" id="nama_pengelola" value="<?= esc($admin_user['nama'] ?? 'Admin tidak ditemukan') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed" readonly>
-                </div>
-                <div>
-                  <label for="no_hp_pengelola" class="block text-sm font-medium text-gray-700">Nomor HP/WA (Admin)</label>
-                  <input type="text" id="no_hp_pengelola" value="<?= esc($admin_user['no_hp'] ?? '-') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed" readonly>
-                </div>
-                <div>
-                  <label for="email_pengelola" class="block text-sm font-medium text-gray-700">E-Mail Pengelola (Admin)</label>
-                  <input type="email" id="email_pengelola" value="<?= esc($admin_user['email'] ?? '-') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed" readonly>
-                </div>
-                <p class="text-xs text-gray-500 mt-2">
-                  <i class="fas fa-info-circle mr-1"></i>
-                  Informasi Pengelola diambil dari data pengguna dengan peran "Admin". Untuk mengubahnya, silakan edit melalui menu <a href="<?= base_url('anggota') ?>" class="text-green-600 hover:underline">Master Data > Anggota</a>.
-                </p>
-              </div>
-
-              <!-- Pengaturan Peminjaman -->
-              <div class="md:col-span-2 space-y-4">
-                <h3 class="text-lg font-semibold text-gray-700 border-b pb-2">Pengaturan Peminjaman</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div>
-                    <label for="max_buku_pinjam" class="block text-sm font-medium text-gray-700">Jumlah Maksimal Buku Dipinjam</label>
-                    <input type="number" name="max_buku_pinjam" id="max_buku_pinjam" value="<?= esc($profile['max_buku_pinjam'] ?? 3) ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                  </div>
-                  <div>
-                    <label for="max_hari_pinjam" class="block text-sm font-medium text-gray-700">Jumlah Maksimal Hari Pinjam</label>
-                    <input type="number" name="max_hari_pinjam" id="max_hari_pinjam" value="<?= esc($profile['max_hari_pinjam'] ?? 7) ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                  </div>
-                  <div>
-                    <label for="denda_per_hari" class="block text-sm font-medium text-gray-700">Denda Keterlambatan (per hari)</label>
-                    <input type="number" name="denda_per_hari" id="denda_per_hari" value="<?= esc($profile['denda_per_hari'] ?? 1000) ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                  </div>
+              <div>
+                <label for="nama_aplikasi" class="block text-sm font-medium text-gray-700">Nama Aplikasi</label>
+                <div class="relative mt-1">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-laptop-code text-gray-400"></i></div>
+                  <input type="text" name="nama_aplikasi" id="nama_aplikasi" value="<?= esc($profile['nama_aplikasi'] ?? '') ?>" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
                 </div>
               </div>
-
+              <div class="md:col-span-2">
+                <label for="alamat" class="block text-sm font-medium text-gray-700">Alamat</label>
+                <textarea name="alamat" id="alamat" rows="3" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"><?= esc($profile['alamat'] ?? '') ?></textarea>
+              </div>
+              <div>
+                <label for="kabupaten_kota" class="block text-sm font-medium text-gray-700">Kabupaten/Kota</label>
+                <input type="text" name="kabupaten_kota" id="kabupaten_kota" value="<?= esc($profile['kabupaten_kota'] ?? '') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+              </div>
+              <div>
+                <label for="npwp" class="block text-sm font-medium text-gray-700">NPWP</label>
+                <input type="text" name="npwp" id="npwp" value="<?= esc($profile['npwp'] ?? '') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+              </div>
+              <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                <div>
+                  <label for="logo" class="block text-sm font-medium text-gray-700 mb-2">Logo Aplikasi</label>
+                  <img id="logo_preview" src="<?= base_url('uploads/profile/' . esc($profile['logo'] ?? 'default-logo.png')) ?>" alt="Logo" class="w-24 h-24 object-contain bg-gray-100 p-2 rounded-lg border mb-2">
+                  <input type="file" name="logo" id="logo" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" onchange="previewFile(this, 'logo_preview')">
+                  <p class="text-xs text-gray-500 mt-1">Kosongkan jika tidak ingin mengubah. PNG/SVG transparan.</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Banner Homepage Member</label>
+                  <img id="banner_preview" src="<?= base_url('uploads/profile/' . ($profile['banner_image'] ?? 'default-banner.png')) ?>" alt="Banner Preview" class="w-full h-24 object-cover rounded-lg bg-gray-100 border mb-2">
+                  <input type="file" name="banner_image" id="banner_image" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" onchange="previewFile(this, 'banner_preview')">
+                  <p class="text-xs text-gray-500 mt-1">PNG, JPG, WEBP (MAX. 2MB). Rasio 10:3.</p>
+                </div>
+              </div>
             </div>
-            <div class="flex justify-end mt-8 pt-6 border-t">
-              <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 shadow-sm flex items-center gap-2">
-                <i class="fas fa-save"></i> Simpan Perubahan
-              </button>
+          </div>
+
+          <!-- Card 2: Penanggung Jawab & Pengelola -->
+          <div class="card-item bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h3 class="text-xl font-bold text-gray-800 border-b pb-3 mb-4">Penanggung Jawab & Pengelola</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="nama_penanggung_jawab" class="block text-sm font-medium text-gray-700">Nama Penanggung Jawab</label>
+                <input type="text" name="nama_penanggung_jawab" id="nama_penanggung_jawab" value="<?= esc($profile['nama_penanggung_jawab'] ?? '') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+              </div>
+              <div>
+                <label for="jabatan_penanggung_jawab" class="block text-sm font-medium text-gray-700">Jabatan Penanggung Jawab</label>
+                <input type="text" name="jabatan_penanggung_jawab" id="jabatan_penanggung_jawab" value="<?= esc($profile['jabatan_penanggung_jawab'] ?? '') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+              </div>
+              <div>
+                <label for="nama_penandatangan_mou" class="block text-sm font-medium text-gray-700">Nama Penandatangan MOU</label>
+                <input type="text" name="nama_penandatangan_mou" id="nama_penandatangan_mou" value="<?= esc($profile['nama_penandatangan_mou'] ?? '') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+              </div>
+              <div>
+                <label for="jabatan_penandatangan_mou" class="block text-sm font-medium text-gray-700">Jabatan Penandatangan MOU</label>
+                <input type="text" name="jabatan_penandatangan_mou" id="jabatan_penandatangan_mou" value="<?= esc($profile['jabatan_penandatangan_mou'] ?? '') ?>" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+              </div>
+              <div class="md:col-span-2 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                <div class="flex">
+                  <div class="py-1"><i class="fas fa-info-circle text-blue-500 mr-3"></i></div>
+                  <div>
+                    <p class="font-semibold text-blue-800">Informasi Pengelola (Admin)</p>
+                    <p class="text-sm text-blue-700">Data pengelola diambil dari pengguna dengan peran "Admin". Untuk mengubahnya, silakan edit melalui menu <a href="<?= base_url('anggota') ?>" class="font-bold hover:underline">Master Data > Anggota</a>.</p>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <!-- Card 3: Pengaturan Peminjaman -->
+          <div class="card-item bg-white rounded-lg shadow-sm p-6">
+            <h3 class="text-xl font-bold text-gray-800 border-b pb-3 mb-4">Pengaturan Peminjaman & Denda</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div>
+                <label for="max_buku_pinjam" class="block text-sm font-medium text-gray-700">Maks. Buku per Pinjam</label>
+                <div class="relative mt-1">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-book-reader text-gray-400"></i></div>
+                  <input type="number" name="max_buku_pinjam" id="max_buku_pinjam" value="<?= esc($profile['max_buku_pinjam'] ?? 3) ?>" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                </div>
+              </div>
+              <div>
+                <label for="max_hari_pinjam" class="block text-sm font-medium text-gray-700">Maks. Hari Peminjaman</label>
+                <div class="relative mt-1">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-calendar-day text-gray-400"></i></div>
+                  <input type="number" name="max_hari_pinjam" id="max_hari_pinjam" value="<?= esc($profile['max_hari_pinjam'] ?? 7) ?>" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                </div>
+              </div>
+              <div>
+                <label for="denda_per_hari" class="block text-sm font-medium text-gray-700">Denda per Hari (Rp)</label>
+                <div class="relative mt-1">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-coins text-gray-400"></i></div>
+                  <input type="number" name="denda_per_hari" id="denda_per_hari" value="<?= esc($profile['denda_per_hari'] ?? 1000) ?>" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end mt-8">
+            <button type="submit" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 font-semibold">
+              <i class="fas fa-save"></i> Simpan Perubahan
+            </button>
           </div>
         </form>
 
@@ -193,6 +212,16 @@
     document.getElementById('sidebar-toggle').addEventListener('click', () => {
       document.documentElement.classList.toggle('sidebar-is-collapsed');
       localStorage.setItem('sidebarCollapsed', document.documentElement.classList.contains('sidebar-is-collapsed'));
+    });
+
+    // Animasi staggered untuk kartu
+    document.addEventListener('DOMContentLoaded', () => {
+      const cards = document.querySelectorAll('.card-item');
+      cards.forEach((card, index) => {
+        setTimeout(() => {
+          card.classList.add('is-visible');
+        }, index * 100); // Delay 100ms untuk setiap kartu
+      });
     });
 
     // Konfigurasi Toast Notifikasi

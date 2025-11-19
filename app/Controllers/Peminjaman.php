@@ -14,17 +14,38 @@ class Peminjaman extends BaseController
     public function index()
     {
         $peminjamanModel = new PeminjamanModel();
+        $statusFilter = $this->request->getGet('status');
 
         // Mengambil data peminjaman beserta nama user dan jumlah buku yang dipinjam
-        $data['peminjaman'] = $peminjamanModel
+        $query = $peminjamanModel
             ->select('peminjaman.*, user.nama as nama_user, COUNT(detail_peminjaman.id_buku) as jumlah_buku')
             ->join('user', 'user.id = peminjaman.id_user')
             ->join('detail_peminjaman', 'detail_peminjaman.id_pinjam = peminjaman.id_pinjam', 'left')
             ->groupBy('peminjaman.id_pinjam')
-            ->orderBy('peminjaman.tanggal_pinjam', 'DESC')
-            ->findAll();
+            ->orderBy('peminjaman.tanggal_pinjam', 'DESC');
 
-        $data['current_page'] = 'peminjaman';
+        // Terapkan filter status jika ada
+        if ($statusFilter && $statusFilter !== 'semua') {
+            if ($statusFilter === 'terlambat') {
+                $query->where('peminjaman.status', 'dipinjam')
+                      ->where('peminjaman.tanggal_kembali <', date('Y-m-d'));
+            } elseif ($statusFilter === 'dipinjam') {
+                $query->where('peminjaman.status', 'dipinjam')
+                      ->where('peminjaman.tanggal_kembali >=', date('Y-m-d'));
+            } else {
+                $query->where('peminjaman.status', $statusFilter);
+            }
+        }
+
+        // Paginasi data
+        $data = [
+            'peminjaman' => $query->paginate(10, 'peminjaman'), // 10 item per halaman
+            'pager' => $peminjamanModel->pager,
+            'currentPage' => $this->request->getVar('page_peminjaman') ? $this->request->getVar('page_peminjaman') : 1,
+            'perPage' => 10,
+            'selected_status' => $statusFilter,
+            'current_page' => 'peminjaman',
+        ];
 
         return view('pages/admin/peminjaman', $data);
     }
@@ -73,10 +94,13 @@ class Peminjaman extends BaseController
             // 5. Kembalikan stok buku
             $borrowedBooks = $detailPeminjamanModel->where('id_pinjam', $peminjamanId)->findAll();
             foreach ($borrowedBooks as $detail) {
-                $bukuModel->set('stok', 'stok + 1', false)
-                          ->set('dipinjam', 'dipinjam - 1', false)
-                          ->where('id', $detail['id_buku'])
-                          ->update();
+                // Validasi tambahan: pastikan buku ada sebelum update
+                $buku = $bukuModel->find($detail['id_buku']);
+                if ($buku) {
+                    $bukuModel->set('stok', 'stok + 1', false)
+                              ->set('dipinjam', 'dipinjam - 1', false)
+                              ->where('id', $detail['id_buku'])->update();
+                }
             }
 
             // 6. Jika ada denda, buat entri baru di tabel denda

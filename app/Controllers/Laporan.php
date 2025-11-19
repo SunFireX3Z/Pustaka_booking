@@ -46,17 +46,27 @@ class Laporan extends BaseController
     /**
      * Mengambil data peminjaman yang akan digunakan untuk laporan.
      */
-    private function getPeminjamanData()
+    private function getPeminjamanData($startDate = null, $endDate = null)
     {
         $peminjamanModel = new PeminjamanModel();
-        return $peminjamanModel
+        $query = $peminjamanModel
             ->select('peminjaman.*, user.nama as nama_user, GROUP_CONCAT(buku.judul_buku SEPARATOR ", ") as judul_buku')
             ->join('user', 'user.id = peminjaman.id_user')
             ->join('detail_peminjaman', 'detail_peminjaman.id_pinjam = peminjaman.id_pinjam', 'left')
             ->join('buku', 'buku.id = detail_peminjaman.id_buku', 'left')
-            ->groupBy('peminjaman.id_pinjam')
-            ->orderBy('peminjaman.tanggal_pinjam', 'DESC')
-            ->findAll();
+            ->groupBy('peminjaman.id_pinjam');
+
+        // Terapkan filter tanggal jika ada
+        if ($startDate) {
+            $query->where('peminjaman.tanggal_pinjam >=', $startDate);
+        }
+        if ($endDate) {
+            // Tambahkan 1 hari ke end_date untuk membuatnya inklusif
+            $endDate = date('Y-m-d', strtotime($endDate . ' +1 day'));
+            $query->where('peminjaman.tanggal_pinjam <', $endDate);
+        }
+
+        return $query->orderBy('peminjaman.tanggal_pinjam', 'DESC')->findAll();
     }
 
 
@@ -214,7 +224,7 @@ class Laporan extends BaseController
      */
     public function anggotaPdf()
     {
-        $data['anggota'] = $this->getAnggotaData();
+        $data['anggota'] = $this->getAnggotaData(); // Laporan anggota tidak menggunakan filter tanggal
         $data['title'] = "Laporan Data Anggota";
         $data['web_profile'] = get_web_profile(); // Menambahkan data profil web
 
@@ -238,7 +248,11 @@ class Laporan extends BaseController
      */
     public function peminjamanExcel()
     {
-        $peminjamanData = $this->getPeminjamanData();
+        // Ambil filter tanggal dari URL
+        $startDate = $this->request->getGet('start_date');
+        $endDate = $this->request->getGet('end_date');
+
+        $peminjamanData = $this->getPeminjamanData($startDate, $endDate);
         $profile = get_web_profile();
 
         $spreadsheet = new Spreadsheet();
@@ -299,8 +313,24 @@ class Laporan extends BaseController
      */
     public function peminjamanpdf()
     {
-        $data['peminjaman'] = $this->getPeminjamanData();
+        // Ambil filter tanggal dari URL
+        $startDate = $this->request->getGet('start_date');
+        $endDate = $this->request->getGet('end_date');
+
+        $data['peminjaman'] = $this->getPeminjamanData($startDate, $endDate);
         $data['title'] = "Laporan Data Peminjaman";
+
+        // Buat subjudul dinamis berdasarkan filter tanggal
+        $subtitle = '';
+        if ($startDate && $endDate) {
+            $subtitle = 'Periode: ' . date('d M Y', strtotime($startDate)) . ' - ' . date('d M Y', strtotime($endDate));
+        } elseif ($startDate) {
+            $subtitle = 'Periode: Dari ' . date('d M Y', strtotime($startDate));
+        } elseif ($endDate) {
+            $subtitle = 'Periode: Sampai ' . date('d M Y', strtotime($endDate));
+        }
+        $data['subtitle'] = $subtitle;
+
         $data['web_profile'] = get_web_profile(); // Sama kayak laporan anggota
 
         // View-nya pun biar konsisten

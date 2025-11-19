@@ -31,6 +31,17 @@
       opacity: 1;
       transform: translateY(0);
     }
+    /* Styling untuk placeholder pada input date */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      background: transparent;
+      bottom: 0; color: transparent; cursor: pointer; height: auto; left: 0; position: absolute; right: 0; top: 0; width: auto;
+    }
+    input[type="date"]:not(:valid) {
+      color: #9ca3af; /* text-gray-400 */
+    }
+    input[type="date"] {
+      color: #374151; /* text-gray-700 */
+    }
   </style>
   <script>
     if (localStorage.getItem('sidebarCollapsed') === 'true') {
@@ -57,63 +68,85 @@
 
     <main class="p-6">
       <div class="w-full max-w-7xl mx-auto" id="laporanContent">
-        <div class="card-item bg-white p-4 rounded-lg shadow-sm mb-6">
-        <div>
-          <h2 class="text-2xl font-bold text-green-600">Cetak Laporan</h2>
-          <p class="text-sm text-gray-500 mt-1">Pilih jenis laporan yang ingin Anda cetak.</p>
+        <div class="card-item relative bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-lg mb-8 overflow-hidden">
+          <div class="absolute -right-10 -bottom-10">
+              <i class="fas fa-file-invoice text-white/10 text-9xl transform -rotate-12"></i>
+          </div>
+          <div class="relative z-10">
+              <h2 class="text-3xl font-bold">Pusat Laporan</h2>
+              <p class="mt-1 text-blue-100">Pilih jenis laporan, filter berdasarkan tanggal, dan cetak dalam format PDF atau Excel.</p>
+          </div>
         </div>
-      </div>
 
-        <!-- Placeholder untuk pilihan laporan -->
-        <div class="card-item grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Filter Laporan -->
+        <div class="card-item bg-white p-6 rounded-lg shadow-sm mb-8">
+          <h3 class="text-xl font-bold text-gray-800 border-b pb-3 mb-4">Filter Laporan</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div>
+              <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Dari Tanggal</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                  <i class="fas fa-calendar-alt text-gray-400"></i>
+                </div>
+                <input type="date" id="start_date" name="start_date" required class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+              </div>
+            </div>
+            <div>
+              <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Sampai Tanggal</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                  <i class="fas fa-calendar-alt text-gray-400"></i>
+                </div>
+                <input type="date" id="end_date" name="end_date" required class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 md:col-span-1">Filter tanggal akan diterapkan pada laporan transaksional seperti Laporan Peminjaman.</p>
+          </div>
+        </div>
+
+        <!-- Pilihan Laporan -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <!-- Laporan Data Buku -->
-          <div class="card-item bg-white rounded-lg shadow-sm p-6 flex flex-col text-center hover:shadow-lg transition-shadow">
-              <i class="fas fa-book text-4xl text-green-500 mb-4"></i>
+          <div class="card-item bg-white rounded-xl shadow-md p-6 flex flex-col text-center hover:shadow-xl hover:scale-[1.02] transition-all">
+              <div class="mx-auto bg-green-100 p-4 rounded-full mb-4"><i class="fas fa-book text-3xl text-green-600"></i></div>
               <h3 class="font-semibold text-lg text-gray-800">Laporan Data Buku</h3>
               <p class="text-sm text-gray-500 mt-1 mb-4 flex-grow">Cetak laporan semua data buku yang terdaftar di perpustakaan.</p>
               <div class="mt-auto grid grid-cols-2 gap-2">
-                <a href="<?= base_url('laporan/buku-excel') ?>" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center justify-center gap-2">
+                <a href="<?= base_url('laporan/buku-excel') ?>" onclick="applyDateFilter(event)" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center justify-center gap-2 transition-colors">
                   <i class="fas fa-file-excel"></i> Excel
                 </a>
-                <a href="<?= base_url('laporan/buku-pdf') ?>" target="_blank" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center justify-center gap-2">
+                <a href="<?= base_url('laporan/buku-pdf') ?>" onclick="applyDateFilter(event)" target="_blank" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center justify-center gap-2 transition-colors">
                   <i class="fas fa-print"></i> Print
                 </a>
               </div>
           </div>
           <!-- Laporan Peminjaman -->
-          <div class="card-item bg-white rounded-lg shadow-sm p-6 flex flex-col items-center text-center hover:shadow-lg transition-shadow">
-              <i class="fas fa-exchange-alt text-4xl text-blue-500 mb-4"></i>
+          <div class="card-item bg-white rounded-xl shadow-md p-6 flex flex-col text-center hover:shadow-xl hover:scale-[1.02] transition-all">
+              <div class="mx-auto bg-blue-100 p-4 rounded-full mb-4"><i class="fas fa-exchange-alt text-3xl text-blue-600"></i></div>
               <h3 class="font-semibold text-lg text-gray-800">Laporan Peminjaman</h3>
-              <p class="text-sm text-gray-500 mt-1 mb-4 flex-grow">Cetak laporan semua transaksi peminjaman buku yang pernah terjadi.</p>
+              <p class="text-sm text-gray-500 mt-1 mb-4 flex-grow">Cetak laporan transaksi peminjaman buku berdasarkan rentang tanggal.</p>
               <div class="mt-auto grid grid-cols-2 gap-2 w-full">
-                <a href="<?= base_url('laporan/peminjaman-excel') ?>" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center justify-center gap-2">
+                <a href="<?= base_url('laporan/peminjaman-excel') ?>" onclick="applyDateFilter(event)" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center justify-center gap-2 transition-colors">
                   <i class="fas fa-file-excel"></i> Excel
                 </a>
-                <a href="<?= base_url('laporan/peminjaman-pdf') ?>" target="_blank" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center justify-center gap-2">
+                <a href="<?= base_url('laporan/peminjaman-pdf') ?>" onclick="applyDateFilter(event)" target="_blank" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center justify-center gap-2 transition-colors">
                   <i class="fas fa-print"></i> Print
                 </a>
               </div>
           </div>
           <!-- Laporan Anggota -->
-          <div class="card-item bg-white rounded-lg shadow-sm p-6 flex flex-col items-center text-center hover:shadow-lg transition-shadow">
-              <i class="fas fa-file-alt text-4xl text-green-500 mb-4"></i>
+          <div class="card-item bg-white rounded-xl shadow-md p-6 flex flex-col text-center hover:shadow-xl hover:scale-[1.02] transition-all">
+              <div class="mx-auto bg-purple-100 p-4 rounded-full mb-4"><i class="fas fa-users text-3xl text-purple-600"></i></div>
               <h3 class="font-semibold text-lg text-gray-800">Laporan Data Anggota</h3>
               <p class="text-sm text-gray-500 mt-1 mb-4 flex-grow">Cetak laporan semua data anggota yang terdaftar di perpustakaan.</p>
               <div class="mt-auto grid grid-cols-2 gap-2 w-full">
-                <a href="<?= base_url('laporan/anggota-excel') ?>" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center justify-center gap-2">
+                <a href="<?= base_url('laporan/anggota-excel') ?>" onclick="applyDateFilter(event)" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center justify-center gap-2 transition-colors">
                   <i class="fas fa-file-excel"></i> Excel
                 </a>
-                <a href="<?= base_url('laporan/anggota-pdf') ?>" target="_blank" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center justify-center gap-2">
+                <a href="<?= base_url('laporan/anggota-pdf') ?>" onclick="applyDateFilter(event)" target="_blank" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center justify-center gap-2 transition-colors">
                   <i class="fas fa-print"></i> Print
                 </a>
               </div>
-          </div>
-          <!-- Laporan Stok Buku -->
-          <div class="card-item bg-white rounded-lg shadow-sm p-6 flex flex-col items-center text-center hover:shadow-lg transition-shadow">
-              <i class="fas fa-file-export text-4xl text-purple-500 mb-4"></i>
-              <h3 class="font-semibold text-lg text-gray-800">Laporan Stok Buku</h3>
-              <p class="text-sm text-gray-500 mt-1 mb-4">Cetak laporan ketersediaan stok buku.</p>
-              <button class="mt-auto bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 w-full">Cetak</button>
           </div>
       </div>
       </div>
@@ -125,6 +158,26 @@
       document.documentElement.classList.toggle('sidebar-is-collapsed');
       localStorage.setItem('sidebarCollapsed', document.documentElement.classList.contains('sidebar-is-collapsed'));
     });
+
+    function applyDateFilter(event) {
+      event.preventDefault(); // Mencegah link langsung terbuka
+
+      const startDate = document.getElementById('start_date').value;
+      const endDate = document.getElementById('end_date').value;
+      const originalUrl = event.currentTarget.href;
+
+      const url = new URL(originalUrl);
+
+      if (startDate) url.searchParams.set('start_date', startDate);
+      if (endDate) url.searchParams.set('end_date', endDate);
+
+      // Buka di tab baru jika targetnya _blank, jika tidak, buka di tab yang sama
+      if (event.currentTarget.target === '_blank') {
+        window.open(url.toString(), '_blank');
+      } else {
+        window.location.href = url.toString();
+      }
+    }
   </script>
   <script>
     // Animasi staggered untuk kartu

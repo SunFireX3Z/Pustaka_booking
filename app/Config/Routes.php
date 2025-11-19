@@ -17,9 +17,12 @@ $routes->get('logout', 'Auth::logout');
 $routes->group('member', ['filter' => 'member'], static function ($routes) {
     $routes->get('/', 'Member::index');
     $routes->get('profile', 'Member::profile');
-    $routes->get('keranjang', 'Member::keranjang');
-    $routes->post('selesaikan-booking', 'Member::selesaikanBooking'); // Rute yang benar untuk menyelesaikan booking
-    $routes->get('keranjang/hapus/(:num)', 'Member::hapusDariKeranjang/$1');
+    $routes->group('keranjang', static function ($routes) {
+        $routes->get('/', 'Member::keranjang');
+        $routes->post('selesaikan', 'Member::selesaikanBooking'); // URL menjadi: member/keranjang/selesaikan
+        $routes->get('batal', 'Member::batalKeranjang');
+        $routes->get('hapus/(:num)', 'Member::hapusDariKeranjang/$1');
+    });
     $routes->get('katalog', 'Member::katalog');
     $routes->get('buku/(:num)', 'Member::detailBuku/$1');
     $routes->post('book/(:num)', 'Member::bookNow/$1'); // Perbaikan: Seharusnya mengarah ke bookNow
@@ -30,6 +33,7 @@ $routes->group('member', ['filter' => 'member'], static function ($routes) {
 $routes->group('', ['filter' => 'admin'], static function ($routes) {
     // Rute utama setelah login
     $routes->get('dashboard', 'Dashboard::index');
+    $routes->get('dashboard/active-users', 'Dashboard::getActiveUsersJson'); // Rute untuk API anggota aktif
 
     // Rute CRUD untuk Buku
     $routes->get('buku', 'Buku::index');

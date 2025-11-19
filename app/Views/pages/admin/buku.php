@@ -96,8 +96,35 @@
     <!-- Content -->
     <main class="p-6">
       <div class="w-full max-w-7xl mx-auto">
-        <!-- Kartu Statistik -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div class="card-item relative bg-gradient-to-r from-green-500 to-blue-500 text-white p-6 rounded-lg shadow-lg mb-8 overflow-hidden">
+        <div class="absolute -right-10 -bottom-10">
+            <i class="fas fa-book-bookmark text-white/10 text-9xl transform -rotate-12"></i>
+        </div>
+        <div class="relative z-10">
+          <h2 class="text-3xl font-bold">Koleksi Buku</h2>
+          <p class="mt-1 text-green-100">Kelola, cari, dan lihat semua koleksi buku yang tersedia di perpustakaan.</p>
+          <form action="<?= base_url('buku') ?>" method="get">
+            <div class="flex flex-col sm:flex-row items-center gap-2 mt-4">
+              <div class="relative w-full sm:w-64">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-gray-400"></i></span>
+                <input type="text" name="keyword" id="searchFilter" placeholder="Cari judul, pengarang..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-white/50 text-gray-800" value="<?= esc($keyword ?? '') ?>">
+              </div>
+              <select name="kategori" id="categoryFilter" class="w-full sm:w-56 px-4 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-white/50 text-gray-800" onchange="this.form.submit()">
+                <option value="all">Semua Kategori</option>
+                <?php foreach ($kategori as $kat): ?>
+                  <option value="<?= esc($kat['id_kategori']) ?>" <?= ($selected_kategori ?? '') == $kat['id_kategori'] ? 'selected' : '' ?>><?= esc($kat['nama_kategori']) ?></option>
+                <?php endforeach; ?>
+              </select>
+              <button onclick="openAddModal()" type="button" class="flex-shrink-0 w-full sm:w-auto bg-white text-green-600 font-semibold px-5 py-2 rounded-full hover:bg-green-50 flex items-center justify-center shadow-md hover:shadow-lg transition-all">
+                  <i class="fas fa-plus mr-2"></i> Tambah Buku
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Kartu Statistik -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <!-- Total Judul Buku -->
         <div class="card-item bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border-l-4 border-purple-500">
           <div class="bg-purple-100 p-3 rounded-full">
@@ -120,35 +147,6 @@
         </div>
       </div>
 
-      <div class="card-item bg-white p-4 rounded-lg shadow-sm mb-6">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h2 class="text-2xl font-bold text-green-600">Daftar Buku Perpustakaan</h2>
-            <p class="text-sm text-gray-500 mt-1">Kelola dan lihat koleksi buku yang tersedia.</p>
-          </div>
-          <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-            <div class="relative w-full sm:w-56">
-              <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                <i class="fas fa-search text-gray-400"></i>
-              </span>
-              <input type="text" id="searchFilter" placeholder="Cari judul atau pengarang..." 
-                     class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
-            </div>
-            <select id="categoryFilter" class="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
-              <option value="all">Semua Kategori</option>
-              <?php
-                foreach ($kategori as $kat):
-              ?>
-                <option value="<?= esc($kat['nama_kategori']) ?>"><?= esc($kat['nama_kategori']) ?></option>
-              <?php endforeach; ?>
-            </select>
-            <button onclick="openAddModal()" class="flex-shrink-0 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center">
-                <i class="fas fa-plus mr-2"></i> Tambah Buku
-            </button>
-          </div>
-        </div>
-      </div>
-
       <?php if ($validation->getErrors()): ?>
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
           <strong class="font-bold">Terjadi Kesalahan!</strong>
@@ -159,12 +157,12 @@
       <?php if (!empty($buku)): ?>
         <div id="bookListContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <?php foreach ($buku as $row): ?>
-              <div class="book-item card-item bg-white rounded-lg shadow-sm overflow-hidden flex items-center transition-all duration-300 hover:shadow-lg" data-category="<?= esc($row['kategori_nama']) ?>">
+              <div class="book-item card-item bg-white rounded-xl shadow-md overflow-hidden flex items-start transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
                 <!-- Gambar -->
-                <img src="<?= base_url('uploads/' . $row['image']) ?>" alt="Cover: <?= esc($row['judul_buku']) ?>" class="w-24 h-auto object-contain flex-shrink-0">
+                <img src="<?= base_url('uploads/' . $row['image']) ?>" alt="Cover: <?= esc($row['judul_buku']) ?>" class="w-28 h-40 object-cover flex-shrink-0">
                 
                 <!-- Info Buku -->
-                <div class="p-4 flex-grow flex flex-col sm:flex-row justify-between items-start">
+                <div class="p-4 flex-grow flex flex-col justify-between self-stretch">
                   <div class="flex-grow">
                     <div class="text-xs font-semibold text-gray-600 mb-1 flex flex-wrap items-center gap-1">
                       <?php
@@ -181,7 +179,7 @@
                         <span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">+<?= $total_kategori - $max_kategori_tampil ?> lagi</span>
                       <?php endif; ?>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-800 leading-tight"><?= esc($row['judul_buku']) ?></h3>
+                    <h3 class="text-base font-bold text-gray-800 leading-tight mt-1"><?= esc($row['judul_buku']) ?></h3>
                     <p class="text-sm text-gray-500" title="Oleh: <?= esc($row['pengarang']) ?>">Oleh: 
                       <?php
                         $pengarang = $row['pengarang'];
@@ -205,7 +203,7 @@
                   </div>
                   
                   <!-- Tombol Aksi -->
-                  <div class="flex-shrink-0 flex items-center gap-2 mt-3 sm:mt-0">
+                  <div class="flex-shrink-0 flex items-center gap-2 mt-3">
                     <a href="<?= base_url('buku/qrcode/' . $row['id']) ?>" target="_blank" class="w-9 h-9 flex items-center justify-center rounded-full text-blue-500 hover:bg-blue-100 transition-colors" title="Tampilkan QR Code">
                       <i class="fas fa-qrcode text-sm"></i>
                     </a>
@@ -233,6 +231,7 @@
           <p class="text-gray-500 mt-2">Tidak ada data buku yang dapat ditampilkan. Silakan tambahkan buku baru.</p>
         </div>
       <?php endif; ?>
+
       </div>
     </main>
   </div>
@@ -658,37 +657,6 @@
         }, index * 100); // Delay 100ms untuk setiap kartu
       });
     });
-
-    // Filter
-    const categoryFilter = document.getElementById('categoryFilter');
-    const searchFilter = document.getElementById('searchFilter');
-
-    function applyFilters() {
-      const selectedCategory = categoryFilter.value;
-      const searchQuery = searchFilter.value.toLowerCase().trim();
-      const bookItems = document.querySelectorAll('.book-item');
-
-      bookItems.forEach(item => {
-        const itemCategory = item.dataset.category;
-        const bookTitle = item.querySelector('h3').textContent.toLowerCase();
-        const bookAuthor = item.querySelector('p').textContent.toLowerCase();
-
-        const categoryMatch = (selectedCategory === 'all' || itemCategory.toLowerCase().includes(selectedCategory.toLowerCase()));
-        const searchMatch = (searchQuery === '' || bookTitle.includes(searchQuery) || bookAuthor.includes(searchQuery) || itemCategory.toLowerCase().includes(searchQuery));
-
-        if (categoryMatch && searchMatch) {
-          item.style.display = 'flex';
-          setTimeout(() => item.classList.add('is-visible'), 10);
-        } else {
-          item.style.display = 'none';
-          item.classList.remove('is-visible');
-        }
-      });
-    }
-
-    // Event Listeners untuk filter
-    categoryFilter.addEventListener('change', applyFilters);
-    searchFilter.addEventListener('input', applyFilters);
 
     // Sidebar Toggle
     const sidebarToggle = document.getElementById('sidebar-toggle');

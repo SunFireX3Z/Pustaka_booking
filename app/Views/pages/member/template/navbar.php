@@ -47,6 +47,7 @@ $inactive_class = 'font-medium text-lg text-slate-600 hover:text-indigo-600 tran
                         </span>
                     <?php endif; ?>
                 </a>
+                <a href="https://smkasyafiiyah.perpustakaan.co.id/home.ks" target="_blank" rel="noopener noreferrer" class="<?= $inactive_class ?>">Perpus Digital</a>
             </div>
         </div>
     </div>

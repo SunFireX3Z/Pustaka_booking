@@ -11,8 +11,8 @@ class AdminFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         $session = session();
-        // Jika tidak ada sesi logged_in, lempar ke halaman login
-        if (!$session->get('logged_in')) {
+        // Jika tidak ada sesi isLoggedIn, lempar ke halaman login
+        if (!$session->get('isLoggedIn')) {
             return redirect()->to('/login')->with('msg', 'Anda harus login terlebih dahulu.');
         }
 

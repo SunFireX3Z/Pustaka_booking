@@ -60,7 +60,7 @@
                     </a>
                 </div>
             <?php else: ?>
-                <div class="space-y-4">
+                <div id="keranjang-items-container" class="space-y-4">
                     <?php foreach ($keranjang as $item): ?>
                         <div class="flex items-center gap-4 p-4 border rounded-lg hover:bg-slate-50 transition">
                             <img src="<?= base_url('uploads/' . esc($item['image'])) ?>" alt="Cover" class="w-16 h-24 object-cover rounded-md flex-shrink-0">
@@ -75,11 +75,34 @@
                     <?php endforeach; ?>
                 </div>
 
-                <div class="mt-8 pt-6 border-t text-center">
-                    <p class="text-slate-600">Total <span class="font-bold"><?= count($keranjang) ?></span> buku di keranjang Anda.</p>
-                    <p class="text-sm text-slate-500 mt-2">Booking Anda akan diproses oleh admin. Silakan tunggu konfirmasi selanjutnya.</p>
+                <div id="keranjang-actions" class="mt-8 pt-6 border-t text-center">
+                    <p class="text-slate-600 mb-4">Total <span class="font-bold"><?= count($keranjang) ?></span> buku di keranjang Anda.</p>
+                    <div class="flex flex-col sm:flex-row justify-center items-center gap-3">
+                        <!-- Tombol Batalkan Semua -->
+                        <a href="<?= base_url('member/keranjang/batal') ?>" id="cancel-all-btn" class="w-full sm:w-auto flex items-center justify-center px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-md">
+                            <i class="fas fa-times-circle mr-2"></i> Batalkan Semua
+                        </a>
+                        <!-- Tombol Selesaikan Booking -->
+                        <form action="<?= base_url('member/keranjang/selesaikan') ?>" method="post" class="w-full sm:w-auto">
+                            <?= csrf_field() ?>
+                            <button type="submit" id="selesaikan-booking-btn" class="w-full flex items-center justify-center px-6 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors shadow-md">
+                                <i class="fas fa-check-circle mr-2"></i> Selesaikan Booking
+                            </button>
+                        </form>
+                    </div>
+                    <p class="text-sm text-slate-500 mt-4">Setelah booking diselesaikan, Anda dapat mengambil buku di perpustakaan.</p>
                 </div>
             <?php endif; ?>
+
+            <!-- Template Keranjang Kosong (disembunyikan secara default) -->
+            <div id="keranjang-kosong-template" class="text-center py-12 hidden">
+                <i class="fas fa-check-circle text-5xl text-green-400 mb-4"></i>
+                <h2 class="text-xl font-semibold text-slate-700">Booking Berhasil!</h2>
+                <p class="text-slate-500 mt-2">Anda akan segera diarahkan ke halaman katalog...</p>
+                <a href="<?= base_url('member/katalog') ?>" class="mt-6 inline-block bg-indigo-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
+                    Kembali ke Katalog
+                </a>
+            </div>
         </div>
     </div>
 
@@ -133,6 +156,123 @@
                 });
             });
         });
+
+        // Konfirmasi untuk Batalkan Semua
+        const cancelAllButton = document.getElementById('cancel-all-btn');
+        if (cancelAllButton) {
+            cancelAllButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.href;
+
+                Swal.fire({
+                    title: 'Batalkan Semua?',
+                    text: "Semua buku dalam keranjang akan dihapus.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Batalkan Semua!',
+                    cancelButtonText: 'Tidak'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Tampilkan loading spinner
+                        Swal.fire({
+                            title: 'Memproses...',
+                            text: 'Mohon tunggu sebentar.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        // Kirim request ke server
+                        fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Sembunyikan item keranjang dan tombol aksi
+                                document.getElementById('keranjang-items-container')?.remove();
+                                document.getElementById('keranjang-actions')?.remove();
+                                // Tampilkan pesan berhasil
+                                document.getElementById('keranjang-kosong-template')?.classList.remove('hidden');
+
+                                AnimatedToast.fire({
+                                    icon: 'success',
+                                    title: data.message
+                                }).then(() => {
+                                    window.location.href = '<?= base_url('member/katalog') ?>';
+                                });
+                            } else {
+                                Swal.fire('Gagal!', data.message || 'Terjadi kesalahan.', 'error');
+                            }
+                        })
+                        .catch(() => {
+                            Swal.fire('Error!', 'Tidak dapat terhubung ke server.', 'error');
+                        });
+                    }
+                });
+            });
+        }
+
+        // Konfirmasi untuk Selesaikan Booking
+        const selesaikanBookingForm = document.querySelector('form[action*="keranjang/selesaikan"]');
+        if (selesaikanBookingForm) {
+            selesaikanBookingForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Selesaikan Booking?',
+                    text: "Anda akan mengkonfirmasi semua buku di keranjang ini. Aksi ini tidak dapat dibatalkan.",
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Selesaikan!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Tampilkan loading spinner
+                        Swal.fire({
+                            title: 'Memproses...',
+                            text: 'Mohon tunggu sebentar.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        // Kirim form data dengan AJAX
+                        fetch(this.action, {
+                            method: 'POST',
+                            body: new FormData(this),
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                AnimatedToast.fire({
+                                    icon: 'success',
+                                    title: data.message
+                                }).then(() => {
+                                    window.location.href = '<?= base_url('member/katalog') ?>';
+                                });
+                            } else {
+                                Swal.fire('Gagal!', data.message || 'Terjadi kesalahan.', 'error');
+                            }
+                        }).catch(() => {
+                            Swal.fire('Error!', 'Tidak dapat terhubung ke server.', 'error');
+                        });
+                    }
+                });
+            });
+        }
     </script>
 </body>
 </html>

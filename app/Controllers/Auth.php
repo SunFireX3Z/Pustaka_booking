@@ -10,8 +10,8 @@ class Auth extends Controller
     public function index()
     {
         // Jika sudah login, arahkan ke dashboard
-        if (session()->get('logged_in')) {
-            return redirect()->to('/dashboard');
+        if (session()->get('isLoggedIn')) {
+            return redirect()->to(session()->get('role_id') == 1 ? '/dashboard' : '/member');
         }
 
         $data = [
@@ -41,7 +41,7 @@ class Auth extends Controller
                     'image'     => $user['image'],
                     'role_id'   => $user['role_id'],
                     'role'      => $user['role'], // Menambahkan nama peran ke sesi
-                    'logged_in' => true
+                    'isLoggedIn' => true
                 ];
                 $session->set($sessionData);
 

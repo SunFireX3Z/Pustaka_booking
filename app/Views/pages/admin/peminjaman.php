@@ -59,6 +59,17 @@
               <h2 class="text-2xl font-bold text-green-600">Daftar Transaksi Peminjaman</h2>
               <p class="text-sm text-gray-500 mt-1">Kelola semua transaksi peminjaman yang sedang berjalan atau sudah selesai.</p>
             </div>
+            <div class="flex items-center gap-2">
+              <form action="<?= base_url('peminjaman') ?>" method="get" class="flex items-center gap-2">
+                <label for="status" class="text-sm font-medium text-gray-700">Filter:</label>
+                <select name="status" id="status" onchange="this.form.submit()" class="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                  <option value="semua" <?= ($selected_status ?? 'semua') == 'semua' ? 'selected' : '' ?>>Semua Status</option>
+                  <option value="dipinjam" <?= ($selected_status ?? '') == 'dipinjam' ? 'selected' : '' ?>>Dipinjam</option>
+                  <option value="terlambat" <?= ($selected_status ?? '') == 'terlambat' ? 'selected' : '' ?>>Terlambat</option>
+                  <option value="kembali" <?= ($selected_status ?? '') == 'kembali' ? 'selected' : '' ?>>Kembali</option>
+                </select>
+              </form>
+            </div>
           </div>
         </div>
 
@@ -66,6 +77,7 @@
           <table class="min-w-full text-sm text-left">
             <thead class="bg-slate-50 border-b border-gray-200 text-slate-600 uppercase text-xs">
               <tr>
+                <th class="py-3 px-6 font-semibold">No</th>
                 <th class="py-3 px-6 font-semibold">ID Pinjam</th>
                 <th class="py-3 px-6 font-semibold">Nama Peminjam</th>
                 <th class="py-3 px-6 font-semibold">Tgl Pinjam</th>
@@ -78,13 +90,14 @@
             <tbody class="text-gray-600">
               <?php if (empty($peminjaman)): ?>
                 <tr>
-                  <td colspan="7" class="text-center py-10 text-gray-500">
+                  <td colspan="8" class="text-center py-10 text-gray-500">
                     <i class="fas fa-folder-open text-4xl mb-3 text-gray-400"></i>
                     <p>Belum ada data peminjaman.</p>
                   </td>
                 </tr>
               <?php else: foreach($peminjaman as $item): ?>
                 <tr class="border-b border-gray-200 hover:bg-gray-50 align-middle">
+                  <td class="py-3 px-6 font-medium"><?= (($currentPage - 1) * $perPage) + (isset($i) ? ++$i : $i = 1) ?></td>
                   <td class="py-3 px-6 font-mono text-gray-500">#<?= esc($item['id_pinjam']) ?></td>
                   <td class="py-3 px-6 font-medium text-gray-800"><?= esc($item['nama_user']) ?></td>
                   <td class="py-3 px-6"><?= date('d M Y', strtotime($item['tanggal_pinjam'])) ?></td>
@@ -138,6 +151,11 @@
             </tbody>
           </table>
         </div>
+        <!-- Paginasi -->
+        <div class="card-item mt-6">
+          <?= $pager->links('peminjaman', 'tailwind_pager') ?>
+        </div>
+
       </div>
     </main>
   </div>

@@ -98,34 +98,55 @@
     <!-- Content -->
     <main class="p-6">
       <div class="w-full max-w-7xl mx-auto">
-        <div class="card-item bg-white p-4 rounded-lg shadow-sm mb-6">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h2 class="text-2xl font-bold text-green-600">Data Anggota Perpustakaan</h2>
-            <p class="text-sm text-gray-500 mt-1">Kelola dan lihat semua anggota yang terdaftar.</p>
+        <div class="card-item relative bg-gradient-to-r from-green-500 to-blue-500 text-white p-6 rounded-lg shadow-lg mb-8 overflow-hidden">
+          <div class="absolute -right-10 -bottom-10">
+              <i class="fas fa-users-cog text-white/10 text-9xl transform -rotate-12"></i>
           </div>
-          <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-            <div class="relative w-full sm:w-52">
-              <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                <i class="fas fa-search text-gray-400"></i>
-              </span>
-              <input type="text" id="searchInput" placeholder="Cari nama/NISN..." 
-                     class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
-            </div>
-            <div class="relative w-full sm:w-48">
-              <select id="classFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+          <div class="relative z-10">
+            <h2 class="text-3xl font-bold">Manajemen Anggota</h2>
+            <p class="mt-1 text-green-100">Kelola, cari, dan lihat semua pengguna yang terdaftar di sistem.</p>
+            <div class="flex flex-col sm:flex-row items-center gap-2 mt-4">
+              <div class="relative w-full sm:w-64">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-gray-400"></i></span>
+                <input type="text" id="searchInput" placeholder="Cari nama, email, NISN..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-white/50 text-gray-800">
+              </div>
+              <select id="classFilter" class="w-full sm:w-56 px-4 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-white/50 text-gray-800">
                 <option value="all">Semua Kelas</option>
                 <?php foreach($unique_kelas as $kelas): ?>
                   <option value="<?= esc($kelas) ?>"><?= esc($kelas) ?></option>
                 <?php endforeach; ?>
               </select>
+              <button onclick="openModal('add')" class="flex-shrink-0 w-full sm:w-auto bg-white text-green-600 font-semibold px-5 py-2 rounded-full hover:bg-green-50 flex items-center justify-center shadow-md hover:shadow-lg transition-all">
+                  <i class="fas fa-plus mr-2"></i> Tambah Anggota
+              </button>
             </div>
-            <button onclick="openModal('add')" class="flex-shrink-0 w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center justify-center">
-              <i class="fas fa-plus mr-2"></i> Tambah Anggota
-            </button>
           </div>
         </div>
-      </div>
+
+        <!-- Kartu Statistik -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="card-item bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border-l-4 border-blue-500">
+            <div class="bg-blue-100 p-3 rounded-full"><i class="fas fa-users fa-lg text-blue-600"></i></div>
+            <div>
+              <p class="text-gray-500 text-sm font-medium">Total Anggota</p>
+              <p class="text-2xl font-bold text-gray-800"><?= count($anggota) ?></p>
+            </div>
+          </div>
+          <div class="card-item bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border-l-4 border-purple-500">
+            <div class="bg-purple-100 p-3 rounded-full"><i class="fas fa-user-shield fa-lg text-purple-600"></i></div>
+            <div>
+              <p class="text-gray-500 text-sm font-medium">Jumlah Admin</p>
+              <p class="text-2xl font-bold text-gray-800"><?= count($admins) ?></p>
+            </div>
+          </div>
+          <div class="card-item bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border-l-4 border-green-500">
+            <div class="bg-green-100 p-3 rounded-full"><i class="fas fa-user-graduate fa-lg text-green-600"></i></div>
+            <div>
+              <p class="text-gray-500 text-sm font-medium">Jumlah Member</p>
+              <p class="text-2xl font-bold text-gray-800"><?= count($members) ?></p>
+            </div>
+          </div>
+        </div>
 
         <!-- Tabel Administrator -->
         <div class="mb-8">
